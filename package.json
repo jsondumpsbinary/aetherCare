@@ -1,0 +1,28 @@
+{
+  "name": "aethercare",
+  "version": "1.0.0",
+  "description": "AetherCare is a desktop-based Hospital Management System (MVP) designed to simplify hospital operations through a centralized digital platform.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev",
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsondumpsbinary/aetherCare.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jsondumpsbinary/aetherCare/issues"
+  },
+  "homepage": "https://github.com/jsondumpsbinary/aetherCare#readme",
+  "devDependencies": {
+    "concurrently": "^10.0.7",
+    "electron": "^45.3.1"
+  }
+}
