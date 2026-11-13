@@ -1,30 +1,131 @@
-
 # AetherCare
 ### Connected Healthcare. Smarter Operations.
 
-AetherCare is a desktop-based Hospital Management System (MVP) designed to simplify hospital operations through a centralized digital platform.
+AetherCare is a desktop-oriented Hospital Management System (MVP) designed to simplify hospital operations through a centralized digital platform.
 
-It provides an integrated solution for managing patients, OPD visits, doctor queues, bed availability, patient admissions, and medical inventory.
+The project aims to bring essential hospital workflows—including patient registration, OPD management, doctor queues, bed allocation, admissions, and medical inventory—into one integrated application.
 
-Built using Electron.js, React.js, Express.js, Prisma ORM, and PostgreSQL, AetherCare aims to improve hospital workflow efficiency and resource coordination.
+Built using **React.js, Electron.js, Express.js, Prisma ORM, and PostgreSQL**, AetherCare focuses on improving hospital workflow efficiency and resource coordination.
+
+---
 
 ## Overview
 
-Hospitals manage multiple interconnected operations, including patient registration, outpatient consultations, bed allocation, admissions, and medicine inventory.
+Hospitals manage several interconnected operations, including patient registration, outpatient consultations, bed allocation, admissions, and medicine inventory.
 
-Managing these operations manually or through disconnected systems can result in delays, inefficient resource utilization, and difficulties in maintaining accurate records.
+Manual processes and disconnected systems can lead to operational delays, inefficient resource utilization, and difficulties maintaining accurate records.
 
-AetherCare addresses these challenges by bringing essential hospital operations into a single desktop application.
+AetherCare aims to address these challenges by providing a centralized platform for managing essential hospital operations.
 
-The MVP focuses on five core modules:
+### Core Modules
 
-- Patient Management
-- OPD Management
-- Bed Management
-- Admissions Management
-- Inventory Management
+1. Patient Management
+2. OPD Management
+3. Bed Management
+4. Admissions Management
+5. Inventory Management
 
-## Features
+---
+
+## Current Development Status
+
+The project is currently in its initial development phase.
+
+| Component | Status |
+|---|---|
+| React + Vite frontend setup | Implemented |
+| Express backend setup | Implemented |
+| Backend health-check endpoint | Implemented |
+| PostgreSQL database setup | Implemented |
+| Prisma 7 configuration | Implemented |
+| Patient database model | Implemented |
+| Department database model | Implemented |
+| Doctor database model | Implemented |
+| OPD visit database model | Implemented |
+| Patient registration APIs | Planned |
+| OPD token generation and queue APIs | Planned |
+| Authentication and access control | Planned |
+| Bed and admissions management | Planned |
+| Inventory management | Planned |
+| Electron desktop integration | Planned |
+
+---
+
+## Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| Electron.js | Desktop application framework |
+| React.js | Frontend user interface |
+| Vite | Frontend development and build tooling |
+| Express.js | Backend API and routing |
+| Prisma ORM 7 | Database schema and queries |
+| PostgreSQL | Relational database |
+| Node.js | Backend runtime |
+| JavaScript | Application logic |
+| bcrypt | Password hashing (planned) |
+| JSON Web Tokens | Authentication (planned) |
+
+---
+
+## System Architecture
+
+AetherCare follows a layered architecture that separates the user interface, backend logic, and database operations.
+
+```text
+       AetherCare Desktop Application
+                    |
+                Electron.js
+                    |
+                 React.js
+              (User Interface)
+                    |
+               HTTP Requests
+                    |
+                Express.js
+               (Backend API)
+                    |
+                Prisma ORM
+              (Database Layer)
+                    |
+               PostgreSQL
+             (Persistent Data)
+```
+
+### Architecture Responsibilities
+
+- **Electron.js:** Provides the desktop application environment.
+- **React.js:** Handles the user interface and user interactions.
+- **Express.js:** Manages backend APIs, routing, and request handling.
+- **Prisma ORM:** Manages database models, relationships, and queries.
+- **PostgreSQL:** Stores persistent application data.
+
+---
+
+## Database Design
+
+The current Prisma schema contains four primary models:
+
+| Model | Responsibility |
+|---|---|
+| Patient | Stores patient information and registration details |
+| Department | Maintains hospital departments |
+| Doctor | Stores doctor information and department associations |
+| OPDVisit | Maintains patient OPD visits, tokens, and visit status |
+
+### Entity Relationships
+
+- A patient can have multiple OPD visits.
+- A department can have multiple doctors.
+- A department can have multiple OPD visits.
+- A doctor belongs to a department.
+- An OPD visit is associated with a patient, doctor, and department.
+
+The database schema is designed to support the patient-to-OPD workflow and can be extended as additional modules are developed.
+
+---
+
+## Planned Features
 
 ### 1. Patient Management
 - Register new patients.
@@ -34,7 +135,7 @@ The MVP focuses on five core modules:
 
 ### 2. OPD Management
 - Create OPD visits for registered patients.
-- Automatically generate OPD tokens.
+- Generate OPD tokens.
 - Manage patient queues.
 - Track and update visit status.
 
@@ -61,114 +162,56 @@ The MVP focuses on five core modules:
 ### 6. Authentication & Access Control
 - Secure user login.
 - Credential validation.
-- Role-based access to application modules.
+- Role-based access control.
 - Password hashing and JWT-based authentication.
 
-## Technology Stack
+---
 
-| Technology | Usage |
-|---|---|
-| Electron.js | Desktop application framework |
-| React.js | User interface |
-| Express.js | Backend API and routing |
-| Prisma ORM | Database queries and data models |
-| PostgreSQL | Relational database |
-| JavaScript | Application logic |
-| bcrypt | Password hashing |
-| JWT | Authentication |
+## Project Structure
 
-## System Architecture
-
-AetherCare follows a layered architecture that separates the desktop application, user interface, backend services, and database operations.
+The current repository is organized into separate frontend and backend applications.
 
 ```text
-       AetherCare Desktop Application
-                    |
-                Electron.js
-                    |
-                 React.js
-               (User Interface)
-                    |
-               Express.js
-               (Backend API)
-                    |
-                Prisma ORM
-             (Database Layer)
-                    |
-               PostgreSQL
-             (Persistent Data)
+AetherCare/
+│
+├── client/
+│   ├── public/
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── ...
+│   └── package.json
+│
+├── server/
+│   ├── prisma/
+│   │   ├── migrations/
+│   │   └── schema.prisma
+│   │
+│   ├── src/
+│   │   ├── config/
+│   │   │   └── db.js
+│   │   ├── modules/
+│   │   ├── app.js
+│   │   └── server.js
+│   │
+│   ├── prisma7.config.ts
+│   └── package.json
+│
+├── .gitignore
+├── package.json
+├── package-lock.json
+└── README.md
 ```
 
-### Architecture Responsibilities
+*The directory structure will evolve as additional modules are implemented.*
 
-- **Electron.js:** Provides the desktop application environment.
-- **React.js:** Handles the user interface and user interactions.
-- **Express.js:** Manages backend APIs, routing, and authentication middleware.
-- **Prisma ORM:** Handles database queries, models, and relationships.
-- **PostgreSQL:** Stores persistent patient, OPD, bed, admission, and inventory data.
+---
 
-## Application Workflow
-
-A typical patient workflow within AetherCare follows these steps:
-
-```text
-          Start Application
-                  |
-                  v
-                Login
-                  |
-                  v
-          Credential Validation
-                  |
-                  v
-           Main Application
-                  |
-                  v
-          Register Patient
-                  |
-                  v
-              OPD Visit
-                  |
-                  v
-           Generate Token
-                  |
-                  v
-         Doctor Consultation
-                  |
-                  v
-          Admission Required?
-              /       \
-            No         Yes
-            |           |
-            v           v
-        End Visit   Check Bed Availability
-                        |
-                        v
-                  Assign Available Bed
-                        |
-                        v
-                   Admit Patient
-                        |
-                        v
-                  Manage Treatment
-                        |
-                        v
-                 Update Inventory
-                        |
-                        v
-                Discharge Patient
-                        |
-                        v
-                   Release Bed
-```
-
-The modules work together to maintain consistency between patient records, OPD visits, bed allocation, admissions, and inventory operations.
-
-## Installation
+## Installation and Setup
 
 ### Prerequisites
 
-Ensure the following are installed on your system:
+Ensure the following are installed:
 
 - Node.js
 - npm
@@ -178,103 +221,109 @@ Ensure the following are installed on your system:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/aethercare.git
+git clone https://github.com/jsondumpsbinary/aetherCare.git
+cd aetherCare
 ```
 
-### 2. Navigate to the Project Directory
-
-```bash
-cd aethercare
-```
-
-### 3. Install Dependencies
+### 2. Install Root Dependencies
 
 ```bash
 npm install
 ```
 
-### 4. Configure the Database
-
-Create a PostgreSQL database:
-
-```sql
-CREATE DATABASE aethercare;
-```
-
-Configure the database connection using the environment variables documented in `.env.example`.
-
-Example:
-
-```env
-DATABASE_URL="postgresql://username:password@localhost:5432/aethercare"
-```
-
-Replace the credentials with your local PostgreSQL configuration.
-
-### 5. Initialize the Database
-
-Run the configured Prisma database commands to initialize the schema and generate the Prisma Client.
-
-Refer to the project's database setup instructions for the exact migration commands.
-
-### 6. Launch the Application
+### 3. Install Frontend Dependencies
 
 ```bash
-npm run start
+cd client
+npm install
+cd ..
 ```
 
-The Electron desktop application should launch once the development environment is configured.
+### 4. Install Backend Dependencies
 
-**Note:** Available npm scripts may vary depending on the project's `package.json`.
+```bash
+cd server
+npm install
+```
 
-## Project Structure
+### 5. Configure Environment Variables
 
-The application follows a modular structure to separate individual hospital management operations.
+Create a `.env` file inside the `server/` directory.
+
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/aethercare_db?schema=public"
+PORT=5000
+```
+
+Replace the database credentials with your local PostgreSQL configuration.
+
+**Important:** Never commit `.env` files or expose database credentials.
+
+### 6. Create the Database
+
+Create the PostgreSQL database:
+
+```sql
+CREATE DATABASE aethercare_db;
+```
+
+### 7. Apply Database Migrations
+
+From the `server/` directory, run:
+
+```bash
+npx prisma migrate deploy
+npx prisma generate
+```
+
+For development, when creating new schema changes, use:
+
+```bash
+npx prisma migrate dev --name migration_name
+```
+
+### 8. Start the Development Environment
+
+From the project root:
+
+```bash
+npm run dev
+```
+
+This starts the frontend and backend development servers concurrently.
+
+| Application | Development URL |
+|---|---|
+| React frontend | http://localhost:5173 |
+| Express backend | http://localhost:5000 |
+| API health check | http://localhost:5000/api/health |
+
+The health-check endpoint can be used to verify that the backend is running.
+
+---
+
+## Development Approach
+
+The backend follows a modular, layered structure:
 
 ```text
-AetherCare/
-│
-├── electron/
-│   ├── main.js
-│   └── preload.js
-│
-├── server/
-│   ├── routes/
-│   ├── controllers/
-│   ├── middleware/
-│   └── index.js
-│
-├── src/
-│   ├── components/
-│   ├── pages/
-│   │   ├── Dashboard/
-│   │   ├── Patients/
-│   │   ├── OPD/
-│   │   ├── Beds/
-│   │   ├── Admissions/
-│   │   └── Inventory/
-│   │
-│   ├── services/
-│   ├── assets/
-│   ├── App.jsx
-│   └── main.jsx
-│
-├── prisma/
-│   └── schema.prisma
-│
-├── .env.example
-├── .gitignore
-├── package.json
-└── README.md
+Routes → Controllers → Services → Prisma → PostgreSQL
 ```
 
-*The directory structure may evolve as development progresses.*
+- **Routes:** Define API endpoints.
+- **Controllers:** Handle HTTP requests and responses.
+- **Services:** Contain application logic and database operations.
+- **Prisma:** Communicates with PostgreSQL.
+
+This structure keeps the application modular and makes individual hospital management modules easier to maintain.
+
+---
 
 ## Security Considerations
 
-Since hospital management systems handle sensitive patient information, AetherCare considers security and data integrity important aspects of development.
+Since hospital management systems handle sensitive patient information, security and data integrity are important development considerations.
 
-The application incorporates the following security considerations:
+Planned security measures include:
 
 - Secure user authentication.
 - Password hashing using bcrypt.
@@ -285,9 +334,11 @@ The application incorporates the following security considerations:
 
 Only synthetic patient data should be used for project demonstrations.
 
+---
+
 ## Future Scope
 
-Potential enhancements for future versions include:
+Potential enhancements include:
 
 - Multi-hospital resource coordination.
 - City-wide hospital bed availability tracking.
@@ -295,16 +346,21 @@ Potential enhancements for future versions include:
 - Improved patient waiting-time estimation.
 - Advanced hospital resource management.
 
+---
+
 ## License
 
 This project is developed as an academic software project.
 
 License information will be added when the project license is finalized.
 
+---
+
 ## Acknowledgements
 
 - [Electron.js](https://www.electronjs.org/) — Desktop application framework.
 - [React.js](https://react.dev/) — User interface library.
+- [Vite](https://vite.dev/) — Frontend development tooling.
 - [Express.js](https://expressjs.com/) — Backend framework.
 - [Prisma](https://www.prisma.io/) — Object-relational mapping.
 - [PostgreSQL](https://www.postgresql.org/) — Relational database system.
