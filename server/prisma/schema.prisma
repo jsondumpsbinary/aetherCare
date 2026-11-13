@@ -1,7 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
   provider = "prisma-client-js"
@@ -9,4 +5,58 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model Patient {
+  id          Int       @id @default(autoincrement())
+  patientCode String    @unique
+  name        String
+  phone       String
+  dateOfBirth DateTime?
+  gender      String?
+  address     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  opdVisits   OPDVisit[]
+}
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  doctors   Doctor[]
+  opdVisits OPDVisit[]
+}
+
+model Doctor {
+  id           Int        @id @default(autoincrement())
+  name         String
+  departmentId Int
+  createdAt    DateTime   @default(now())
+
+  department   Department @relation(fields: [departmentId], references: [id])
+  opdVisits    OPDVisit[]
+}
+
+model OPDVisit {
+  id           Int      @id @default(autoincrement())
+  tokenNumber  String
+  visitDate    DateTime @default(now())
+  status       String   @default("WAITING")
+
+  patientId    Int
+  doctorId     Int
+  departmentId Int
+
+  patient      Patient    @relation(fields: [patientId], references: [id])
+  doctor       Doctor     @relation(fields: [doctorId], references: [id])
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  createdAt    DateTime   @default(now())
+
+  @@unique([departmentId, visitDate, tokenNumber])
+  @@index([patientId])
+  @@index([visitDate, status])
 }
