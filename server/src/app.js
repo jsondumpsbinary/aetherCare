@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const patientRoutes = require("./modules/patients/patient.routes");
 
 const app = express();
 
@@ -12,5 +13,8 @@ app.get("/api/health", (req, res) => {
         message: "AetherCare API is running"
     });
 });
+
+app.use("/api/patients", patientRoutes);
+
 
 module.exports = app;
