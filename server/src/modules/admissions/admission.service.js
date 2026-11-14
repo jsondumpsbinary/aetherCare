@@ -97,6 +97,87 @@ async function createAdmission({ patientId, bedId, reason }) {
     });
 }
 
+async function getAdmissions({ patientId, status } = {}) {
+    const where = {};
+
+    if (patientId) {
+        where.patientId = Number(patientId);
+    }
+
+    if (status) {
+        where.status = status;
+    }
+
+    return await prisma.admission.findMany({
+        where,
+        include: {
+            patient: true,
+            bed: {
+                include: {
+                    ward: true,
+                },
+            },
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    });
+}
+
+async function getActiveAdmissions({ patientId } = {}) {
+    return await getAdmissions({ patientId, status: "ADMITTED" });
+}
+
+async function getAdmissionById(id) {
+    return await prisma.admission.findUnique({
+        where: { id: Number(id) },
+        include: {
+            patient: true,
+            bed: {
+                include: {
+                    ward: true,
+                },
+            },
+        },
+    });
+}
+
+async function updateAdmission(id, data) {
+    const existing = await prisma.admission.findUnique({
+        where: { id: Number(id) },
+    });
+
+    if (!existing) {
+        return { notFound: true };
+    }
+
+    if (data.status === "DISCHARGED") {
+        return {
+            invalidTransition: true,
+            message: "Please use the discharge endpoint (/api/admissions/:id/discharge) to discharge a patient.",
+        };
+    }
+
+    const updated = await prisma.admission.update({
+        where: { id: Number(id) },
+        data,
+        include: {
+            patient: true,
+            bed: {
+                include: {
+                    ward: true,
+                },
+            },
+        },
+    });
+
+    return { admission: updated };
+}
+
 module.exports = {
     createAdmission,
+    getAdmissions,
+    getActiveAdmissions,
+    getAdmissionById,
+    updateAdmission,
 };
