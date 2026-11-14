@@ -17,7 +17,8 @@ model Patient {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  opdVisits OPDVisit[]
+  opdVisits   OPDVisit[]
+  admissions  Admission[]
 }
 
 model Department {
@@ -93,8 +94,34 @@ model Bed {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  ward      Ward      @relation(fields: [wardId], references: [id])
+  ward       Ward        @relation(fields: [wardId], references: [id])
+  admissions Admission[]
 
   @@index([wardId])
+  @@index([status])
+}
+
+enum AdmissionStatus {
+  ADMITTED
+  DISCHARGED
+  CANCELLED
+}
+
+model Admission {
+  id            Int             @id @default(autoincrement())
+  patientId     Int
+  bedId         Int
+  admissionDate DateTime        @default(now())
+  dischargeDate DateTime?
+  reason        String?
+  status        AdmissionStatus @default(ADMITTED)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  patient       Patient         @relation(fields: [patientId], references: [id])
+  bed           Bed             @relation(fields: [bedId], references: [id])
+
+  @@index([patientId])
+  @@index([bedId])
   @@index([status])
 }
