@@ -3,6 +3,7 @@ const {
     registerPatient,
     getPatients,
     getPatientById,
+    updatePatient
 } = require("./patient.service");
 
 async function createPatient(req, res) {
@@ -123,11 +124,95 @@ async function fetchPatientById(req, res) {
     }
 }
 
+async function editPatient(req, res) {
+    try {
+        const id = Number(req.params.id);
 
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid patient ID.",
+            });
+        }
+
+        const allowedFields = [
+            "name",
+            "phone",
+            "dateOfBirth",
+            "gender",
+            "address",
+        ];
+
+        const data = {};
+
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                data[field] = req.body[field];
+            }
+        }
+
+        if (Object.keys(data).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No valid fields provided for update.",
+            });
+        }
+
+        if (data.name !== undefined && !data.name.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Name cannot be empty.",
+            });
+        }
+
+        if (data.phone !== undefined && !data.phone.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Phone cannot be empty.",
+            });
+        }
+
+        if (data.dateOfBirth !== undefined) {
+            const date = new Date(data.dateOfBirth);
+
+            if (Number.isNaN(date.getTime())) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid date of birth.",
+                });
+            }
+
+            data.dateOfBirth = date;
+        }
+
+        const patient = await updatePatient(id, data);
+
+        return res.status(200).json({
+            success: true,
+            message: "Patient updated successfully.",
+            data: patient,
+        });
+    } catch (error) {
+        if (error.code === "P2025") {
+            return res.status(404).json({
+                success: false,
+                message: "Patient not found.",
+            });
+        }
+
+        console.error("Updating patient error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to update patient.",
+        });
+    }
+}
 
 
 module.exports = {
     createPatient,
     listPatients,
-    fetchPatientById
+    fetchPatientById,
+    editPatient
 };

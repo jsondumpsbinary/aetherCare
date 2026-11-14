@@ -70,9 +70,19 @@ async function getPatientById(id) {
     return patient;
 }
 
+async function updatePatient(id, data) {
+    return await prisma.patient.update({
+        where: {
+            id: Number(id),
+        },
+        data,
+    });
+}
+
 
 module.exports = {
   registerPatient,
   getPatients,
-  getPatientById
+  getPatientById,
+  updatePatient
 };
