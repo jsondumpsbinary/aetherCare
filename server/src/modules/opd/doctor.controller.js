@@ -1,4 +1,7 @@
-const { createDoctor } = require("./doctor.service");
+const {
+    createDoctor,
+    getDoctors,
+} = require("./doctor.service");
 
 async function addDoctor(req, res) {
     try {
@@ -45,6 +48,39 @@ async function addDoctor(req, res) {
     }
 }
 
+async function listDoctors(req, res) {
+    try {
+        const { departmentId } = req.query;
+
+        if (
+            departmentId !== undefined &&
+            (!Number.isInteger(Number(departmentId)) ||
+                Number(departmentId) <= 0)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid department ID.",
+            });
+        }
+
+        const doctors = await getDoctors(departmentId);
+
+        return res.status(200).json({
+            success: true,
+            count: doctors.length,
+            data: doctors,
+        });
+    } catch (error) {
+        console.error("Fetching doctors error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to fetch doctors.",
+        });
+    }
+}
+
 module.exports = {
     addDoctor,
+    listDoctors,
 };

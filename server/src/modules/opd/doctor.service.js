@@ -1,3 +1,4 @@
+const { get } = require("node:http");
 const prisma = require("../../config/db");
 
 async function createDoctor(name, departmentId) {
@@ -11,7 +12,23 @@ async function createDoctor(name, departmentId) {
         },
     });
 }
+async function getDoctors(departmentId) {
+    return await prisma.doctor.findMany({
+        where: departmentId
+            ? {
+                departmentId: Number(departmentId),
+            }
+            : undefined,
+        include: {
+            department: true,
+        },
+        orderBy: {
+            name: "asc",
+        },
+    });
+}
 
 module.exports = {
     createDoctor,
+    getDoctors
 };
