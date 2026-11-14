@@ -24,6 +24,43 @@ async function registerPatient(patientData) {
   return patient;
 }
 
+
+async function getPatients(search) {
+    const patients = await prisma.patient.findMany({
+        where: search
+            ? {
+                OR: [
+                    {
+                        name: {
+                            contains: search,
+                            mode: "insensitive",
+                        },
+                    },
+                    {
+                        phone: {
+                            contains: search,
+                        },
+                    },
+                    {
+                        patientCode: {
+                            contains: search,
+                            mode: "insensitive",
+                        },
+                    },
+                ],
+            }
+            : undefined,
+
+        orderBy: {
+            createdAt: "desc",
+        },
+    });
+
+    return patients;
+}
+
+
 module.exports = {
   registerPatient,
+  getPatients
 };
