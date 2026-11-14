@@ -61,3 +61,40 @@ model OPDVisit {
   @@index([patientId])
   @@index([visitDate, status])
 }
+
+enum BedType {
+  GENERAL
+  ICU
+  PRIVATE
+}
+
+enum BedStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+}
+
+model Ward {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  beds        Bed[]
+}
+
+model Bed {
+  id        Int       @id @default(autoincrement())
+  bedNumber String    @unique
+  bedType   BedType   @default(GENERAL)
+  status    BedStatus @default(AVAILABLE)
+  wardId    Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  ward      Ward      @relation(fields: [wardId], references: [id])
+
+  @@index([wardId])
+  @@index([status])
+}
