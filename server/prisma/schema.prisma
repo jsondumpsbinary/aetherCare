@@ -19,6 +19,7 @@ model Patient {
 
   opdVisits   OPDVisit[]
   admissions  Admission[]
+  stockMovements StockMovement[]
 }
 
 model Department {
@@ -142,4 +143,53 @@ model User {
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+enum StockMovementType {
+  RESTOCK
+  DISPENSED
+  ADJUSTMENT
+  DISCARDED
+}
+
+model Medicine {
+  id                Int             @id @default(autoincrement())
+  name              String
+  genericName       String?
+  category          String?
+  batchNumber       String
+  expiryDate        DateTime?
+  currentStock      Int             @default(0)
+  lowStockThreshold Int             @default(10)
+  unit              String          @default("units")
+  unitPrice         Float?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  stockMovements    StockMovement[]
+
+  @@index([name])
+  @@index([category])
+  @@index([batchNumber])
+  @@index([currentStock])
+}
+
+model StockMovement {
+  id            Int               @id @default(autoincrement())
+  medicineId    Int
+  patientId     Int?
+  quantity      Int
+  movementType  StockMovementType
+  previousStock Int
+  newStock      Int
+  reason        String?
+  createdAt     DateTime          @default(now())
+
+  medicine      Medicine          @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+  patient       Patient?          @relation(fields: [patientId], references: [id])
+
+  @@index([medicineId])
+  @@index([patientId])
+  @@index([movementType])
+  @@index([createdAt])
 }
