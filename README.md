@@ -42,10 +42,12 @@ The project is currently in its initial development phase.
 | Department database model | Implemented |
 | Doctor database model | Implemented |
 | OPD visit database model | Implemented |
-| Patient registration APIs | Planned |
+| Ward, Bed, and Admission database models | Implemented |
+| Bed and admissions management APIs | Implemented |
+| Patient registration APIs | Implemented |
+| Department and Doctor APIs | Implemented |
 | OPD token generation and queue APIs | Planned |
 | Authentication and access control | Planned |
-| Bed and admissions management | Planned |
 | Inventory management | Planned |
 | Electron desktop integration | Planned |
 
