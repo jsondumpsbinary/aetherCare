@@ -5,6 +5,7 @@ const departmentRoutes = require("./modules/opd/department.routes");
 const doctorRoutes = require("./modules/opd/doctor.routes");
 const wardRoutes = require("./modules/beds/ward.routes");
 const bedRoutes = require("./modules/beds/bed.routes");
+const admissionRoutes = require("./modules/admissions/admission.routes");
 
 
 const app = express();
@@ -24,6 +25,7 @@ app.use("/api/departments", departmentRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/wards", wardRoutes);
 app.use("/api/beds", bedRoutes);
+app.use("/api/admissions", admissionRoutes);
 
 
 module.exports = app;
