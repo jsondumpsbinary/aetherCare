@@ -3,6 +3,8 @@ const {
     getMedicines,
     getMedicineById,
     updateMedicine,
+    restockMedicine,
+    adjustStock,
 } = require("./inventory.service");
 
 async function createMedicine(req, res) {
@@ -180,9 +182,116 @@ async function editMedicine(req, res) {
     }
 }
 
+async function restock(req, res) {
+    try {
+        const id = Number(req.params.id);
+        const { quantity, batchNumber, expiryDate, reason } = req.body;
+
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid medicine ID.",
+            });
+        }
+
+        if (quantity === undefined || !Number.isInteger(Number(quantity)) || Number(quantity) <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Quantity must be a positive integer.",
+            });
+        }
+
+        const result = await restockMedicine(id, {
+            quantity,
+            batchNumber,
+            expiryDate,
+            reason,
+        });
+
+        if (result.notFound) {
+            return res.status(404).json({
+                success: false,
+                message: "Medicine not found.",
+            });
+        }
+
+        if (result.invalidQuantity) {
+            return res.status(400).json({
+                success: false,
+                message: "Quantity must be a positive integer.",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Medicine restocked successfully.",
+            data: {
+                medicine: result.medicine,
+                movement: result.movement,
+            },
+        });
+    } catch (error) {
+        console.error("Error restocking medicine:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error while restocking medicine.",
+        });
+    }
+}
+
+async function adjust(req, res) {
+    try {
+        const id = Number(req.params.id);
+        const { newStock, reason } = req.body;
+
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid medicine ID.",
+            });
+        }
+
+        if (newStock === undefined || !Number.isInteger(Number(newStock)) || Number(newStock) < 0) {
+            return res.status(400).json({
+                success: false,
+                message: "New stock must be a non-negative integer.",
+            });
+        }
+
+        const result = await adjustStock(id, {
+            newStock,
+            reason,
+        });
+
+        if (result.notFound) {
+            return res.status(404).json({
+                success: false,
+                message: "Medicine not found.",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Medicine stock adjusted successfully.",
+            data: {
+                medicine: result.medicine,
+                movement: result.movement,
+            },
+        });
+    } catch (error) {
+        console.error("Error adjusting stock:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error while adjusting stock.",
+        });
+    }
+}
+
 module.exports = {
     createMedicine,
     listMedicines,
     fetchMedicineById,
     editMedicine,
+    restock,
+    adjust,
 };

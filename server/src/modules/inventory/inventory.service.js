@@ -147,9 +147,111 @@ async function updateMedicine(id, data) {
     return { medicine: updated };
 }
 
+async function restockMedicine(id, { quantity, batchNumber, expiryDate, reason }) {
+    const medicineId = Number(id);
+    const qty = Number(quantity);
+
+    if (!Number.isInteger(qty) || qty <= 0) {
+        return { invalidQuantity: true };
+    }
+
+    return await prisma.$transaction(async (tx) => {
+        const medicine = await tx.medicine.findUnique({
+            where: { id: medicineId },
+        });
+
+        if (!medicine) {
+            return { notFound: true };
+        }
+
+        const previousStock = medicine.currentStock;
+        const newStock = previousStock + qty;
+
+        const updateData = {
+            currentStock: newStock,
+        };
+
+        if (batchNumber && batchNumber.trim()) {
+            updateData.batchNumber = batchNumber.trim();
+        }
+
+        if (expiryDate) {
+            updateData.expiryDate = new Date(expiryDate);
+        }
+
+        const updatedMedicine = await tx.medicine.update({
+            where: { id: medicineId },
+            data: updateData,
+        });
+
+        const movement = await tx.stockMovement.create({
+            data: {
+                medicineId,
+                quantity: qty,
+                movementType: "RESTOCK",
+                previousStock,
+                newStock,
+                reason: reason ? reason.trim() : "Stock replenishment",
+            },
+        });
+
+        return {
+            success: true,
+            medicine: updatedMedicine,
+            movement,
+        };
+    });
+}
+
+async function adjustStock(id, { newStock, reason }) {
+    const medicineId = Number(id);
+    const targetStock = Number(newStock);
+
+    if (!Number.isInteger(targetStock) || targetStock < 0) {
+        return { invalidStock: true };
+    }
+
+    return await prisma.$transaction(async (tx) => {
+        const medicine = await tx.medicine.findUnique({
+            where: { id: medicineId },
+        });
+
+        if (!medicine) {
+            return { notFound: true };
+        }
+
+        const previousStock = medicine.currentStock;
+        const diff = targetStock - previousStock;
+
+        const updatedMedicine = await tx.medicine.update({
+            where: { id: medicineId },
+            data: { currentStock: targetStock },
+        });
+
+        const movement = await tx.stockMovement.create({
+            data: {
+                medicineId,
+                quantity: Math.abs(diff),
+                movementType: "ADJUSTMENT",
+                previousStock,
+                newStock: targetStock,
+                reason: reason ? reason.trim() : `Manual inventory adjustment (${diff >= 0 ? "+" : ""}${diff})`,
+            },
+        });
+
+        return {
+            success: true,
+            medicine: updatedMedicine,
+            movement,
+        };
+    });
+}
+
 module.exports = {
     addMedicine,
     getMedicines,
     getMedicineById,
     updateMedicine,
+    restockMedicine,
+    adjustStock,
 };
