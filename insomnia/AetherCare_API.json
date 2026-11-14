@@ -1,0 +1,291 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-11-14T18:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "wrk_aethercare",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "AetherCare API",
+      "description": "Hospital Management System - Beds, Wards & Admissions Module API Collection",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_aethercare",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:5000",
+        "ward_id": "1",
+        "bed_id": "1",
+        "patient_id": "1",
+        "admission_id": "1"
+      },
+      "dataPropertyOrder": {
+        "&": ["base_url", "ward_id", "bed_id", "patient_id", "admission_id"]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1
+    },
+    {
+      "_id": "fld_health",
+      "_type": "request_group",
+      "parentId": "wrk_aethercare",
+      "name": "Health",
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_health",
+      "_type": "request",
+      "parentId": "fld_health",
+      "name": "Health Check",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/health",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "metaSortKey": -100
+    },
+    {
+      "_id": "fld_beds",
+      "_type": "request_group",
+      "parentId": "wrk_aethercare",
+      "name": "Beds",
+      "metaSortKey": -90
+    },
+    {
+      "_id": "req_create_ward",
+      "_type": "request",
+      "parentId": "fld_beds",
+      "name": "Create Ward",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/wards",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Emergency Ward\",\n  \"description\": \"Emergency and trauma care ward\"\n}"
+      },
+      "parameters": [],
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_get_wards",
+      "_type": "request",
+      "parentId": "fld_beds",
+      "name": "Get All Wards",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/wards",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "metaSortKey": -90
+    },
+    {
+      "_id": "req_create_bed",
+      "_type": "request",
+      "parentId": "fld_beds",
+      "name": "Create Bed",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/beds",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"bedNumber\": \"EMG-101\",\n  \"wardId\": {{ _.ward_id }},\n  \"bedType\": \"ICU\",\n  \"status\": \"AVAILABLE\"\n}"
+      },
+      "parameters": [],
+      "metaSortKey": -80
+    },
+    {
+      "_id": "req_get_beds",
+      "_type": "request",
+      "parentId": "fld_beds",
+      "name": "Get All Beds",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/beds",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "metaSortKey": -70
+    },
+    {
+      "_id": "req_get_bed_by_id",
+      "_type": "request",
+      "parentId": "fld_beds",
+      "name": "Get Bed by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/beds/{{ _.bed_id }}",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "metaSortKey": -60
+    },
+    {
+      "_id": "req_get_available_beds",
+      "_type": "request",
+      "parentId": "fld_beds",
+      "name": "Get Available Beds",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/beds/available",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "metaSortKey": -50
+    },
+    {
+      "_id": "req_filter_beds_ward",
+      "_type": "request",
+      "parentId": "fld_beds",
+      "name": "Filter Beds by Ward",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/beds",
+      "headers": [],
+      "body": {},
+      "parameters": [
+        { "name": "wardId", "value": "{{ _.ward_id }}" }
+      ],
+      "metaSortKey": -40
+    },
+    {
+      "_id": "req_filter_beds_status",
+      "_type": "request",
+      "parentId": "fld_beds",
+      "name": "Filter Beds by Status",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/beds",
+      "headers": [],
+      "body": {},
+      "parameters": [
+        { "name": "status", "value": "AVAILABLE" }
+      ],
+      "metaSortKey": -30
+    },
+    {
+      "_id": "req_update_bed",
+      "_type": "request",
+      "parentId": "fld_beds",
+      "name": "Update Bed",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/beds/{{ _.bed_id }}",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"MAINTENANCE\"\n}"
+      },
+      "parameters": [],
+      "metaSortKey": -20
+    },
+    {
+      "_id": "fld_admissions",
+      "_type": "request_group",
+      "parentId": "wrk_aethercare",
+      "name": "Admissions",
+      "metaSortKey": -80
+    },
+    {
+      "_id": "req_create_admission",
+      "_type": "request",
+      "parentId": "fld_admissions",
+      "name": "Create Admission",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/admissions",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"patientId\": {{ _.patient_id }},\n  \"bedId\": {{ _.bed_id }},\n  \"reason\": \"Acute respiratory distress\"\n}"
+      },
+      "parameters": [],
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_get_admissions",
+      "_type": "request",
+      "parentId": "fld_admissions",
+      "name": "Get All Admissions",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/admissions",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "metaSortKey": -90
+    },
+    {
+      "_id": "req_get_admission_by_id",
+      "_type": "request",
+      "parentId": "fld_admissions",
+      "name": "Get Admission by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/admissions/{{ _.admission_id }}",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "metaSortKey": -80
+    },
+    {
+      "_id": "req_get_active_admissions",
+      "_type": "request",
+      "parentId": "fld_admissions",
+      "name": "Get Active Admissions",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/admissions/active",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "metaSortKey": -70
+    },
+    {
+      "_id": "req_get_patient_admissions",
+      "_type": "request",
+      "parentId": "fld_admissions",
+      "name": "Get Patient Admissions",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/admissions",
+      "headers": [],
+      "body": {},
+      "parameters": [
+        { "name": "patientId", "value": "{{ _.patient_id }}" }
+      ],
+      "metaSortKey": -60
+    },
+    {
+      "_id": "req_update_admission",
+      "_type": "request",
+      "parentId": "fld_admissions",
+      "name": "Update Admission",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/admissions/{{ _.admission_id }}",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"reason\": \"Updated admission reason: recovering well\"\n}"
+      },
+      "parameters": [],
+      "metaSortKey": -50
+    },
+    {
+      "_id": "req_discharge_patient",
+      "_type": "request",
+      "parentId": "fld_admissions",
+      "name": "Discharge Patient",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/admissions/{{ _.admission_id }}/discharge",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "metaSortKey": -40
+    }
+  ]
+}
