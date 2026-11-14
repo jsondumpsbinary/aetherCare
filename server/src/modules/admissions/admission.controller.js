@@ -4,6 +4,7 @@ const {
     getActiveAdmissions,
     getAdmissionById,
     updateAdmission,
+    dischargeAdmission,
 } = require("./admission.service");
 
 async function admitPatient(req, res) {
@@ -219,10 +220,46 @@ async function editAdmission(req, res) {
     }
 }
 
+async function dischargePatient(req, res) {
+    try {
+        const id = Number(req.params.id);
+
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid admission ID.",
+            });
+        }
+
+        const result = await dischargeAdmission(id);
+
+        if (result.error) {
+            return res.status(result.status).json({
+                success: false,
+                message: result.message,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Patient discharged successfully.",
+            data: result.admission,
+        });
+    } catch (error) {
+        console.error("Discharging patient error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to discharge patient.",
+        });
+    }
+}
+
 module.exports = {
     admitPatient,
     listAdmissions,
     listActiveAdmissions,
     fetchAdmissionById,
     editAdmission,
+    dischargePatient,
 };

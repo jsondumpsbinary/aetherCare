@@ -174,10 +174,70 @@ async function updateAdmission(id, data) {
     return { admission: updated };
 }
 
+async function dischargeAdmission(id) {
+    return await prisma.$transaction(async (tx) => {
+        const admission = await tx.admission.findUnique({
+            where: { id: Number(id) },
+            include: {
+                bed: true,
+                patient: true,
+            },
+        });
+
+        if (!admission) {
+            return {
+                error: "ADMISSION_NOT_FOUND",
+                status: 404,
+                message: "Admission not found.",
+            };
+        }
+
+        if (admission.status !== "ADMITTED") {
+            return {
+                error: "INVALID_DISCHARGE_STATUS",
+                status: 400,
+                message: `Cannot discharge admission with status '${admission.status}'. Only active admissions can be discharged.`,
+            };
+        }
+
+        const dischargeDate = new Date();
+
+        const updatedAdmission = await tx.admission.update({
+            where: { id: Number(id) },
+            data: {
+                status: "DISCHARGED",
+                dischargeDate,
+            },
+            include: {
+                patient: true,
+                bed: {
+                    include: {
+                        ward: true,
+                    },
+                },
+            },
+        });
+
+        // Release associated bed to AVAILABLE
+        await tx.bed.update({
+            where: { id: admission.bedId },
+            data: {
+                status: "AVAILABLE",
+            },
+        });
+
+        return {
+            success: true,
+            admission: updatedAdmission,
+        };
+    });
+}
+
 module.exports = {
     createAdmission,
     getAdmissions,
     getActiveAdmissions,
     getAdmissionById,
     updateAdmission,
+    dischargeAdmission,
 };
