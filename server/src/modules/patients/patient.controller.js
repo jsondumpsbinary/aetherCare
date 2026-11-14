@@ -3,7 +3,8 @@ const {
     registerPatient,
     getPatients,
     getPatientById,
-    updatePatient
+    updatePatient,
+    deletePatient
 } = require("./patient.service");
 
 async function createPatient(req, res) {
@@ -208,11 +209,51 @@ async function editPatient(req, res) {
         });
     }
 }
+async function removePatient(req, res) {
+    try {
+        const id = Number(req.params.id);
 
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid patient ID.",
+            });
+        }
+
+        const result = await deletePatient(id);
+
+        if (result.notFound) {
+            return res.status(404).json({
+                success: false,
+                message: "Patient not found.",
+            });
+        }
+
+        if (result.hasVisits) {
+            return res.status(409).json({
+                success: false,
+                message: "Cannot delete a patient with existing OPD visits.",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Patient deleted successfully.",
+        });
+    } catch (error) {
+        console.error("Deleting patient error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to delete patient.",
+        });
+    }
+}
 
 module.exports = {
     createPatient,
     listPatients,
     fetchPatientById,
-    editPatient
+    editPatient,
+    removePatient
 };

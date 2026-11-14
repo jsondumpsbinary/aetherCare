@@ -79,10 +79,37 @@ async function updatePatient(id, data) {
     });
 }
 
+async function deletePatient(id) {
+    const patient = await prisma.patient.findUnique({
+        where: { id: Number(id) },
+        include: {
+            _count: {
+                select: {
+                    opdVisits: true,
+                },
+            },
+        },
+    });
+
+    if (!patient) {
+        return { notFound: true };
+    }
+
+    if (patient._count.opdVisits > 0) {
+        return { hasVisits: true };
+    }
+
+    await prisma.patient.delete({
+        where: { id: Number(id) },
+    });
+
+    return { deleted: true };
+}
 
 module.exports = {
   registerPatient,
   getPatients,
   getPatientById,
-  updatePatient
+  updatePatient,
+  deletePatient
 };
