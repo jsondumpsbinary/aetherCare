@@ -1,5 +1,9 @@
 
-const { registerPatient,getPatients } = require("./patient.service");
+const {
+    registerPatient,
+    getPatients,
+    getPatientById,
+} = require("./patient.service");
 
 async function createPatient(req, res) {
     try {
@@ -84,8 +88,46 @@ async function listPatients(req, res) {
 }
 
 
+async function fetchPatientById(req, res) {
+    try {
+        const { id } = req.params;
+
+        if (!Number.isInteger(Number(id)) || Number(id) <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid patient ID.",
+            });
+        }
+
+        const patient = await getPatientById(id);
+
+        if (!patient) {
+            return res.status(404).json({
+                success: false,
+                message: "Patient not found.",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: patient,
+        });
+
+    } catch (error) {
+        console.error("Fetching patient error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to fetch patient.",
+        });
+    }
+}
+
+
+
 
 module.exports = {
     createPatient,
-    listPatients
+    listPatients,
+    fetchPatientById
 };

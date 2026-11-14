@@ -60,7 +60,19 @@ async function getPatients(search) {
 }
 
 
+async function getPatientById(id) {
+    const patient = await prisma.patient.findUnique({
+        where: {
+            id: Number(id),
+        },
+    });
+
+    return patient;
+}
+
+
 module.exports = {
   registerPatient,
-  getPatients
+  getPatients,
+  getPatientById
 };
