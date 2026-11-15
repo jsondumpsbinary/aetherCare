@@ -1,4 +1,3 @@
-
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -26,7 +25,7 @@ const admissionManagers = ["ADMIN", "RECEPTIONIST", "NURSE"];
 const inventoryManagers = ["ADMIN", "NURSE", "DOCTOR"];
 
 app.use(helmet());
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
