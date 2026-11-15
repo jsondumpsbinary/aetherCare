@@ -51,6 +51,13 @@ async function admitPatient(req, res) {
             data: result.admission,
         });
     } catch (error) {
+        if (error.code === "P2034") {
+            return res.status(409).json({
+                success: false,
+                message: "Admission changed concurrently. Please retry.",
+            });
+        }
+
         console.error("Admission creation error:", error);
 
         return res.status(500).json({
@@ -189,6 +196,16 @@ async function editAdmission(req, res) {
             });
         }
 
+        if (
+            data.status !== undefined &&
+            !["ADMITTED", "DISCHARGED", "CANCELLED"].includes(data.status)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid admission status.",
+            });
+        }
+
         const result = await updateAdmission(id, data);
 
         if (result.notFound) {
@@ -211,6 +228,13 @@ async function editAdmission(req, res) {
             data: result.admission,
         });
     } catch (error) {
+        if (error.code === "P2034") {
+            return res.status(409).json({
+                success: false,
+                message: "Admission changed concurrently. Please retry.",
+            });
+        }
+
         console.error("Updating admission error:", error);
 
         return res.status(500).json({
@@ -246,6 +270,13 @@ async function dischargePatient(req, res) {
             data: result.admission,
         });
     } catch (error) {
+        if (error.code === "P2034") {
+            return res.status(409).json({
+                success: false,
+                message: "Admission changed concurrently. Please retry.",
+            });
+        }
+
         console.error("Discharging patient error:", error);
 
         return res.status(500).json({

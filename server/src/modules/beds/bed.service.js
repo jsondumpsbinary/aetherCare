@@ -67,37 +67,84 @@ async function getBedById(id) {
 }
 
 async function updateBed(id, data) {
-    const existingBed = await prisma.bed.findUnique({
-        where: { id: Number(id) },
-    });
-
-    if (!existingBed) {
-        return { notFound: true };
-    }
-
-    if (data.status === "AVAILABLE" && existingBed.status === "OCCUPIED") {
-        return { cannotMarkAvailable: true };
-    }
-
-    if (data.wardId !== undefined) {
-        const ward = await prisma.ward.findUnique({
-            where: { id: Number(data.wardId) },
+    return await prisma.$transaction(async (tx) => {
+        const bedId = Number(id);
+        const existingBed = await tx.bed.findUnique({
+            where: { id: bedId },
         });
 
-        if (!ward) {
-            return { wardNotFound: true };
+        if (!existingBed) {
+            return { notFound: true };
         }
-    }
 
-    const updatedBed = await prisma.bed.update({
-        where: { id: Number(id) },
-        data,
-        include: {
-            ward: true,
-        },
+        const updateData = { ...data };
+
+        if (updateData.wardId !== undefined) {
+            const ward = await tx.ward.findUnique({
+                where: { id: Number(updateData.wardId) },
+            });
+
+            if (!ward) {
+                return { wardNotFound: true };
+            }
+        }
+
+        if (updateData.status !== undefined) {
+            if (updateData.status === "OCCUPIED") {
+                return { statusManagedByAdmission: true };
+            }
+
+            if (existingBed.status === "OCCUPIED") {
+                if (updateData.status === "AVAILABLE") {
+                    return { cannotMarkAvailable: true };
+                }
+
+                return { statusManagedByAdmission: true };
+            }
+
+            const activeAdmission = await tx.admission.findFirst({
+                where: {
+                    bedId,
+                    status: "ADMITTED",
+                },
+            });
+
+            if (activeAdmission) {
+                return { statusManagedByAdmission: true };
+            }
+
+            if (updateData.status !== existingBed.status) {
+                const statusUpdate = await tx.bed.updateMany({
+                    where: {
+                        id: bedId,
+                        status: existingBed.status,
+                    },
+                    data: {
+                        status: updateData.status,
+                    },
+                });
+
+                if (statusUpdate.count === 0) {
+                    return { statusConflict: true };
+                }
+            }
+
+            delete updateData.status;
+        }
+
+        const bed = Object.keys(updateData).length > 0
+            ? await tx.bed.update({
+                where: { id: bedId },
+                data: updateData,
+                include: { ward: true },
+            })
+            : await tx.bed.findUnique({
+                where: { id: bedId },
+                include: { ward: true },
+            });
+
+        return { bed };
     });
-
-    return { bed: updatedBed };
 }
 
 module.exports = {

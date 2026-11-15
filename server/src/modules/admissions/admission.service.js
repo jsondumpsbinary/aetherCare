@@ -94,6 +94,8 @@ async function createAdmission({ patientId, bedId, reason }) {
             success: true,
             admission,
         };
+    }, {
+        isolationLevel: "Serializable",
     });
 }
 
@@ -143,41 +145,122 @@ async function getAdmissionById(id) {
 }
 
 async function updateAdmission(id, data) {
-    const existing = await prisma.admission.findUnique({
-        where: { id: Number(id) },
-    });
+    return await prisma.$transaction(async (tx) => {
+        const admissionId = Number(id);
+        const existing = await tx.admission.findUnique({
+            where: { id: admissionId },
+        });
 
-    if (!existing) {
-        return { notFound: true };
-    }
+        if (!existing) {
+            return { notFound: true };
+        }
 
-    if (data.status === "DISCHARGED") {
-        return {
-            invalidTransition: true,
-            message: "Please use the discharge endpoint (/api/admissions/:id/discharge) to discharge a patient.",
-        };
-    }
+        if (data.status === "DISCHARGED") {
+            return {
+                invalidTransition: true,
+                message: "Please use the discharge endpoint (/api/admissions/:id/discharge) to discharge a patient.",
+            };
+        }
 
-    const updated = await prisma.admission.update({
-        where: { id: Number(id) },
-        data,
-        include: {
-            patient: true,
-            bed: {
+        if (data.status === "ADMITTED" && existing.status !== "ADMITTED") {
+            return {
+                invalidTransition: true,
+                message: "A non-active admission cannot be reactivated.",
+            };
+        }
+
+        if (data.status === "CANCELLED") {
+            if (existing.status !== "ADMITTED") {
+                return {
+                    invalidTransition: true,
+                    message: "Only active admissions can be cancelled.",
+                };
+            }
+
+            const otherActiveAdmission = await tx.admission.findFirst({
+                where: {
+                    bedId: existing.bedId,
+                    status: "ADMITTED",
+                    id: { not: admissionId },
+                },
+            });
+
+            const updateResult = await tx.admission.updateMany({
+                where: {
+                    id: admissionId,
+                    status: "ADMITTED",
+                },
+                data,
+            });
+
+            if (updateResult.count === 0) {
+                return {
+                    invalidTransition: true,
+                    message: "Only active admissions can be cancelled.",
+                };
+            }
+
+            if (otherActiveAdmission) {
+                await tx.bed.updateMany({
+                    where: {
+                        id: existing.bedId,
+                        status: { not: "OCCUPIED" },
+                    },
+                    data: {
+                        status: "OCCUPIED",
+                    },
+                });
+            } else {
+                await tx.bed.updateMany({
+                    where: {
+                        id: existing.bedId,
+                        status: "OCCUPIED",
+                    },
+                    data: {
+                        status: "AVAILABLE",
+                    },
+                });
+            }
+
+            const updated = await tx.admission.findUnique({
+                where: { id: admissionId },
                 include: {
-                    ward: true,
+                    patient: true,
+                    bed: {
+                        include: {
+                            ward: true,
+                        },
+                    },
+                },
+            });
+
+            return { admission: updated };
+        }
+
+        const updated = await tx.admission.update({
+            where: { id: admissionId },
+            data,
+            include: {
+                patient: true,
+                bed: {
+                    include: {
+                        ward: true,
+                    },
                 },
             },
-        },
-    });
+        });
 
-    return { admission: updated };
+        return { admission: updated };
+    }, {
+        isolationLevel: "Serializable",
+    });
 }
 
 async function dischargeAdmission(id) {
     return await prisma.$transaction(async (tx) => {
+        const admissionId = Number(id);
         const admission = await tx.admission.findUnique({
-            where: { id: Number(id) },
+            where: { id: admissionId },
             include: {
                 bed: true,
                 patient: true,
@@ -200,14 +283,59 @@ async function dischargeAdmission(id) {
             };
         }
 
+        const otherActiveAdmission = await tx.admission.findFirst({
+            where: {
+                bedId: admission.bedId,
+                status: "ADMITTED",
+                id: { not: admissionId },
+            },
+        });
+
         const dischargeDate = new Date();
 
-        const updatedAdmission = await tx.admission.update({
-            where: { id: Number(id) },
+        const updateResult = await tx.admission.updateMany({
+            where: {
+                id: admissionId,
+                status: "ADMITTED",
+            },
             data: {
                 status: "DISCHARGED",
                 dischargeDate,
             },
+        });
+
+        if (updateResult.count === 0) {
+            return {
+                error: "INVALID_DISCHARGE_STATUS",
+                status: 400,
+                message: "Only active admissions can be discharged.",
+            };
+        }
+
+        if (otherActiveAdmission) {
+            await tx.bed.updateMany({
+                where: {
+                    id: admission.bedId,
+                    status: { not: "OCCUPIED" },
+                },
+                data: {
+                    status: "OCCUPIED",
+                },
+            });
+        } else {
+            await tx.bed.updateMany({
+                where: {
+                    id: admission.bedId,
+                    status: "OCCUPIED",
+                },
+                data: {
+                    status: "AVAILABLE",
+                },
+            });
+        }
+
+        const updatedAdmission = await tx.admission.findUnique({
+            where: { id: admissionId },
             include: {
                 patient: true,
                 bed: {
@@ -218,18 +346,12 @@ async function dischargeAdmission(id) {
             },
         });
 
-        // Release associated bed to AVAILABLE
-        await tx.bed.update({
-            where: { id: admission.bedId },
-            data: {
-                status: "AVAILABLE",
-            },
-        });
-
         return {
             success: true,
             admission: updatedAdmission,
         };
+    }, {
+        isolationLevel: "Serializable",
     });
 }
 

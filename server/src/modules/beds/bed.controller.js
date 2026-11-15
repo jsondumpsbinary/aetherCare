@@ -40,6 +40,13 @@ async function addBed(req, res) {
             });
         }
 
+        if (status === "OCCUPIED") {
+            return res.status(400).json({
+                success: false,
+                message: "Beds can only become occupied through patient admission.",
+            });
+        }
+
         const result = await createBed({
             bedNumber: bedNumber.trim(),
             bedType: bedType || "GENERAL",
@@ -268,6 +275,20 @@ async function editBed(req, res) {
             return res.status(400).json({
                 success: false,
                 message: "Occupied beds cannot be manually marked available. Discharge the patient to release the bed.",
+            });
+        }
+
+        if (result.statusManagedByAdmission) {
+            return res.status(400).json({
+                success: false,
+                message: "Bed status must be managed through patient admission and discharge.",
+            });
+        }
+
+        if (result.statusConflict) {
+            return res.status(409).json({
+                success: false,
+                message: "Bed status changed concurrently. Please retry.",
             });
         }
 
