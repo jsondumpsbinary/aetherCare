@@ -10,6 +10,7 @@ const visitRoutes = require("./modules/opd/visit.routes");
 const wardRoutes = require("./modules/beds/ward.routes");
 const bedRoutes = require("./modules/beds/bed.routes");
 const admissionRoutes = require("./modules/admissions/admission.routes");
+const inventoryRoutes = require("./modules/inventory/inventory.routes");
 const authRoutes = require("./modules/auth/auth.routes");
 const authenticate = require("./middleware/authenticate");
 const authorize = require("./middleware/authorize");
@@ -22,6 +23,7 @@ const patientManagers = ["ADMIN", "RECEPTIONIST"];
 const opdManagers = ["ADMIN", "RECEPTIONIST", "DOCTOR"];
 const bedManagers = ["ADMIN", "NURSE"];
 const admissionManagers = ["ADMIN", "RECEPTIONIST", "NURSE"];
+const inventoryManagers = ["ADMIN", "NURSE", "DOCTOR"];
 
 app.use(helmet());
 app.use(cors({ origin: "http://localhost:5173" }));
@@ -78,7 +80,9 @@ app.use(
     "/api/opd-visits",
     authenticate,
     authorizeMethods({
+        GET: allHospitalRoles,
         POST: opdManagers,
+        PATCH: opdManagers,
     }),
     visitRoutes
 );
@@ -116,6 +120,18 @@ app.use(
         PATCH: admissionManagers,
     }),
     admissionRoutes
+);
+
+// Inventory
+app.use(
+    "/api/inventory",
+    authenticate,
+    authorizeMethods({
+        GET: allHospitalRoles,
+        POST: inventoryManagers,
+        PATCH: inventoryManagers,
+    }),
+    inventoryRoutes
 );
 
 module.exports = app;
