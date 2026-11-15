@@ -25,7 +25,13 @@
         "admission_id": "1"
       },
       "dataPropertyOrder": {
-        "&": ["base_url", "ward_id", "bed_id", "patient_id", "admission_id"]
+        "&": [
+          "base_url",
+          "ward_id",
+          "bed_id",
+          "patient_id",
+          "admission_id"
+        ]
       },
       "color": null,
       "isPrivate": false,
@@ -65,7 +71,10 @@
       "method": "POST",
       "url": "{{ _.base_url }}/api/wards",
       "headers": [
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -94,7 +103,10 @@
       "method": "POST",
       "url": "{{ _.base_url }}/api/beds",
       "headers": [
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -149,7 +161,10 @@
       "headers": [],
       "body": {},
       "parameters": [
-        { "name": "wardId", "value": "{{ _.ward_id }}" }
+        {
+          "name": "wardId",
+          "value": "{{ _.ward_id }}"
+        }
       ],
       "metaSortKey": -40
     },
@@ -163,7 +178,10 @@
       "headers": [],
       "body": {},
       "parameters": [
-        { "name": "status", "value": "AVAILABLE" }
+        {
+          "name": "status",
+          "value": "AVAILABLE"
+        }
       ],
       "metaSortKey": -30
     },
@@ -175,7 +193,10 @@
       "method": "PATCH",
       "url": "{{ _.base_url }}/api/beds/{{ _.bed_id }}",
       "headers": [
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -199,7 +220,10 @@
       "method": "POST",
       "url": "{{ _.base_url }}/api/admissions",
       "headers": [
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -254,7 +278,10 @@
       "headers": [],
       "body": {},
       "parameters": [
-        { "name": "patientId", "value": "{{ _.patient_id }}" }
+        {
+          "name": "patientId",
+          "value": "{{ _.patient_id }}"
+        }
       ],
       "metaSortKey": -60
     },
@@ -266,7 +293,10 @@
       "method": "PATCH",
       "url": "{{ _.base_url }}/api/admissions/{{ _.admission_id }}",
       "headers": [
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -286,6 +316,208 @@
       "body": {},
       "parameters": [],
       "metaSortKey": -40
+    },
+    {
+      "_id": "fld_opd",
+      "_type": "request_group",
+      "parentId": "wrk_aethercare",
+      "name": "OPD Queue",
+      "metaSortKey": -75
+    },
+    {
+      "_id": "req_create_opd_visit",
+      "_type": "request",
+      "parentId": "fld_opd",
+      "name": "Create OPD Visit",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/opd-visits",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"patientId\": 1,\n  \"doctorId\": 1,\n  \"departmentId\": 1\n}"
+      },
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_get_opd_queue",
+      "_type": "request",
+      "parentId": "fld_opd",
+      "name": "Get OPD Queue",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/opd-visits?departmentId=1&status=WAITING",
+      "headers": [],
+      "body": {},
+      "metaSortKey": -90
+    },
+    {
+      "_id": "req_update_opd_status",
+      "_type": "request",
+      "parentId": "fld_opd",
+      "name": "Update OPD Visit Status",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/opd-visits/1/status",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"IN_CONSULTATION\"\n}"
+      },
+      "metaSortKey": -80
+    },
+    {
+      "_id": "fld_inventory",
+      "_type": "request_group",
+      "parentId": "wrk_aethercare",
+      "name": "Inventory",
+      "metaSortKey": -70
+    },
+    {
+      "_id": "req_add_medicine",
+      "_type": "request",
+      "parentId": "fld_inventory",
+      "name": "Add Medicine",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/inventory/medicines",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Amoxicillin 500mg\",\n  \"genericName\": \"Amoxicillin\",\n  \"category\": \"Antibiotics\",\n  \"batchNumber\": \"AMX-2026-001\",\n  \"expiryDate\": \"2027-12-31\",\n  \"currentStock\": 100,\n  \"lowStockThreshold\": 20,\n  \"unit\": \"capsules\",\n  \"unitPrice\": 15.5\n}"
+      },
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_list_medicines",
+      "_type": "request",
+      "parentId": "fld_inventory",
+      "name": "List Medicines",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/inventory/medicines?search=Amoxicillin",
+      "headers": [],
+      "body": {},
+      "metaSortKey": -90
+    },
+    {
+      "_id": "req_get_medicine_by_id",
+      "_type": "request",
+      "parentId": "fld_inventory",
+      "name": "Get Medicine by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/inventory/medicines/1",
+      "headers": [],
+      "body": {},
+      "metaSortKey": -80
+    },
+    {
+      "_id": "req_update_medicine",
+      "_type": "request",
+      "parentId": "fld_inventory",
+      "name": "Update Medicine Metadata",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/inventory/medicines/1",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"unitPrice\": 18.0,\n  \"lowStockThreshold\": 25\n}"
+      },
+      "metaSortKey": -70
+    },
+    {
+      "_id": "req_restock_medicine",
+      "_type": "request",
+      "parentId": "fld_inventory",
+      "name": "Restock Medicine",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/inventory/medicines/1/restock",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"quantity\": 50,\n  \"reason\": \"Quarterly stock replenishment\"\n}"
+      },
+      "metaSortKey": -60
+    },
+    {
+      "_id": "req_issue_medicine",
+      "_type": "request",
+      "parentId": "fld_inventory",
+      "name": "Issue Medicine (Treatment)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/inventory/medicines/1/issue",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"quantity\": 5,\n  \"patientId\": 1,\n  \"reason\": \"Inpatient treatment prescription\"\n}"
+      },
+      "metaSortKey": -50
+    },
+    {
+      "_id": "req_adjust_stock",
+      "_type": "request",
+      "parentId": "fld_inventory",
+      "name": "Adjust Stock Count",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/inventory/medicines/1/adjust",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"newStock\": 85,\n  \"reason\": \"Audit count correction\"\n}"
+      },
+      "metaSortKey": -40
+    },
+    {
+      "_id": "req_low_stock_alerts",
+      "_type": "request",
+      "parentId": "fld_inventory",
+      "name": "Get Low-Stock Alerts",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/inventory/low-stock",
+      "headers": [],
+      "body": {},
+      "metaSortKey": -30
+    },
+    {
+      "_id": "req_stock_movements",
+      "_type": "request",
+      "parentId": "fld_inventory",
+      "name": "Get Stock Movement History",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/inventory/movements?medicineId=1",
+      "headers": [],
+      "body": {},
+      "metaSortKey": -20
     }
   ]
 }
