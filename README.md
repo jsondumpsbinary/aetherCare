@@ -46,10 +46,10 @@ The project is currently in its initial development phase.
 | Bed and admissions management APIs | Implemented |
 | Patient registration APIs | Implemented |
 | Department and Doctor APIs | Implemented |
-| OPD token generation and queue APIs | Planned |
-| Authentication and access control | Planned |
-| Inventory management | Planned |
-| Electron desktop integration | Planned |
+| OPD token generation and queue APIs | Implemented |
+| Authentication and access control | Implemented |
+| Inventory management | Implemented |
+| Electron desktop integration | Implemented |
 
 ---
 
@@ -253,8 +253,9 @@ npm install
 Create a `.env` file inside the `server/` directory.
 
 ```env
-DATABASE_URL="postgresql://username:password@localhost:5432/aethercare_db?schema=public"
-PORT=5000
+DATABASE_URL="postgresql://username:password@localhost:5432/aethercare?schema=public"
+PORT=5001
+JWT_SECRET="your-secure-jwt-secret-at-least-32-chars-long"
 ```
 
 Replace the database credentials with your local PostgreSQL configuration.
@@ -297,8 +298,8 @@ This starts the frontend and backend development servers concurrently.
 | Application | Development URL |
 |---|---|
 | React frontend | http://localhost:5173 |
-| Express backend | http://localhost:5000 |
-| API health check | http://localhost:5000/api/health |
+| Express backend | http://localhost:5001 |
+| API health check | http://localhost:5001/api/health |
 
 The health-check endpoint can be used to verify that the backend is running.
 
