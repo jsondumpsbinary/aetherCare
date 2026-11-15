@@ -21,4 +21,11 @@ router.post(
     addStaff
 );
 
+router.post(
+    "/users",
+    authenticate,
+    authorize("ADMIN"),
+    addStaff
+);
+
 module.exports = router;

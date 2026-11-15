@@ -84,6 +84,7 @@ async function loginUser({ email, password }) {
 
 async function createStaff({ name, email, password, role }) {
     const allowedRoles = [
+        "ADMIN",
         "RECEPTIONIST",
         "DOCTOR",
         "NURSE",
@@ -110,6 +111,7 @@ async function createStaff({ name, email, password, role }) {
             email: true,
             role: true,
             isActive: true,
+            createdAt: true,
         },
     });
 }

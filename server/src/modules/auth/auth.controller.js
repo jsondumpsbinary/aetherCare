@@ -122,10 +122,10 @@ async function addStaff(req, res) {
             });
         }
 
-        if (name.trim().length < 2 || password.length < 8) {
+        if (name.trim().length < 2 || password.length < 12) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid name or password length.",
+                message: "Name must have at least 2 characters and password at least 12 characters.",
             });
         }
 
