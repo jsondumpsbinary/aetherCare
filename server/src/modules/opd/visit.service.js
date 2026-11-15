@@ -3,7 +3,6 @@ const prisma = require("../../config/db");
 async function createOPDVisit(patientId, doctorId, departmentId) {
     return await prisma.$transaction(
         async (tx) => {
-            // Verify patient exists
             const patient = await tx.patient.findUnique({
                 where: { id: patientId },
             });
@@ -12,7 +11,6 @@ async function createOPDVisit(patientId, doctorId, departmentId) {
                 throw new Error("PATIENT_NOT_FOUND");
             }
 
-            // Verify doctor exists and belongs to department
             const doctor = await tx.doctor.findFirst({
                 where: {
                     id: doctorId,
@@ -24,7 +22,6 @@ async function createOPDVisit(patientId, doctorId, departmentId) {
                 throw new Error("DOCTOR_DEPARTMENT_MISMATCH");
             }
 
-            // Today's date at midnight
             const now = new Date();
 
             const visitDay = new Date(
@@ -33,7 +30,6 @@ async function createOPDVisit(patientId, doctorId, departmentId) {
                 now.getDate()
             );
 
-            // Count existing visits for this department today
             const count = await tx.oPDVisit.count({
                 where: {
                     departmentId,

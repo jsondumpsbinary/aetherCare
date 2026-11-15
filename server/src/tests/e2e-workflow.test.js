@@ -65,7 +65,6 @@ async function runE2ETests() {
         let testPatient2Id;
         let testAdmissionId;
 
-        // Step 1: Create a ward
         await test("Step 1: Create a ward", async () => {
             const res = await fetch(`${base}/api/wards`, {
                 method: "POST",
@@ -82,7 +81,6 @@ async function runE2ETests() {
             assert.ok(testWardId > 0);
         });
 
-        // Step 2: Create two beds in the ward
         await test("Step 2: Create two beds in the ward", async () => {
             const timestamp = Date.now();
             const res1 = await fetch(`${base}/api/beds`, {
@@ -114,7 +112,6 @@ async function runE2ETests() {
             assert.strictEqual(data2.data.status, "AVAILABLE");
         });
 
-        // Step 3: Obtain an existing patient ID from Patient Management
         await test("Step 3: Obtain/register patient ID from Patient Management", async () => {
             const res1 = await fetch(`${base}/api/patients`, {
                 method: "POST",
@@ -141,7 +138,6 @@ async function runE2ETests() {
             testPatient2Id = data2.data.id;
         });
 
-        // Step 4: Fetch available beds
         await test("Step 4: Fetch available beds", async () => {
             const res = await fetch(`${base}/api/beds/available?wardId=${testWardId}`, {
                 headers: authHeaders,
@@ -154,7 +150,6 @@ async function runE2ETests() {
             assert.strictEqual(bed1Found.status, "AVAILABLE");
         });
 
-        // Step 5: Admit the patient to the first bed
         await test("Step 5: Admit the patient to the first bed", async () => {
             const res = await fetch(`${base}/api/admissions`, {
                 method: "POST",
@@ -171,7 +166,6 @@ async function runE2ETests() {
             assert.strictEqual(data.data.status, "ADMITTED");
         });
 
-        // Step 6: Verify the bed becomes OCCUPIED
         await test("Step 6: Verify the bed becomes OCCUPIED", async () => {
             const res = await fetch(`${base}/api/beds/${testBed1Id}`, {
                 headers: authHeaders,
@@ -181,7 +175,6 @@ async function runE2ETests() {
             assert.strictEqual(data.data.status, "OCCUPIED");
         });
 
-        // Step 7: Verify the admission becomes ADMITTED
         await test("Step 7: Verify the admission becomes ADMITTED", async () => {
             const res = await fetch(`${base}/api/admissions/${testAdmissionId}`, {
                 headers: authHeaders,
@@ -193,7 +186,6 @@ async function runE2ETests() {
             assert.strictEqual(data.data.bedId, testBed1Id);
         });
 
-        // Step 8 & 9: Attempt to assign the same bed again and verify rejection
         await test("Step 8 & 9: Attempt to assign same bed again -> rejected", async () => {
             const res = await fetch(`${base}/api/admissions`, {
                 method: "POST",
@@ -208,7 +200,6 @@ async function runE2ETests() {
             assert.strictEqual(data.success, false);
         });
 
-        // Step 10 & 11: Attempt to admit same patient to another bed -> rejected
         await test("Step 10 & 11: Attempt to admit same patient to another bed -> rejected", async () => {
             const res = await fetch(`${base}/api/admissions`, {
                 method: "POST",
@@ -224,7 +215,6 @@ async function runE2ETests() {
             assert.match(data.message, /active admission/i);
         });
 
-        // Step 12: Discharge the patient
         await test("Step 12: Discharge the patient", async () => {
             const res = await fetch(`${base}/api/admissions/${testAdmissionId}/discharge`, {
                 method: "PATCH",
@@ -235,7 +225,6 @@ async function runE2ETests() {
             assert.strictEqual(data.success, true);
         });
 
-        // Step 13: Verify the admission becomes DISCHARGED
         await test("Step 13: Verify the admission becomes DISCHARGED", async () => {
             const res = await fetch(`${base}/api/admissions/${testAdmissionId}`, {
                 headers: authHeaders,
@@ -246,7 +235,6 @@ async function runE2ETests() {
             assert.ok(data.data.dischargeDate !== null);
         });
 
-        // Step 14: Verify the bed becomes AVAILABLE
         await test("Step 14: Verify the bed becomes AVAILABLE", async () => {
             const res = await fetch(`${base}/api/beds/${testBed1Id}`, {
                 headers: authHeaders,
@@ -256,7 +244,6 @@ async function runE2ETests() {
             assert.strictEqual(data.data.status, "AVAILABLE");
         });
 
-        // Step 15 & 16: Attempt duplicate discharge -> rejected
         await test("Step 15 & 16: Attempt duplicate discharge -> rejected", async () => {
             const res = await fetch(`${base}/api/admissions/${testAdmissionId}/discharge`, {
                 method: "PATCH",
@@ -267,7 +254,6 @@ async function runE2ETests() {
             assert.strictEqual(data.success, false);
         });
 
-        // Additional Negative & Edge Case Tests
         await test("Validation: Invalid patient ID returns 404", async () => {
             const res = await fetch(`${base}/api/admissions`, {
                 method: "POST",
@@ -335,7 +321,6 @@ async function runE2ETests() {
         });
 
         await test("Validation: Occupied bed cannot be manually marked available", async () => {
-            // Admit patient 2 to bed 2
             await fetch(`${base}/api/admissions`, {
                 method: "POST",
                 headers: authHeaders,
@@ -345,7 +330,6 @@ async function runE2ETests() {
                 }),
             });
 
-            // Try to patch bed 2 to AVAILABLE
             const res = await fetch(`${base}/api/beds/${testBed2Id}`, {
                 method: "PATCH",
                 headers: authHeaders,
@@ -355,7 +339,6 @@ async function runE2ETests() {
         });
 
         await test("Concurrency: Parallel admission requests for same bed", async () => {
-            // Create a fresh bed
             const freshBedRes = await fetch(`${base}/api/beds`, {
                 method: "POST",
                 headers: authHeaders,
@@ -366,7 +349,6 @@ async function runE2ETests() {
             });
             const freshBed = (await freshBedRes.json()).data;
 
-            // Create two new patients
             const pA = (await (await fetch(`${base}/api/patients`, {
                 method: "POST",
                 headers: authHeaders,
@@ -379,7 +361,6 @@ async function runE2ETests() {
                 body: JSON.stringify({ name: "Patient Concurrent B", phone: "9000000002" }),
             })).json()).data;
 
-            // Fire both admission requests simultaneously
             const [resA, resB] = await Promise.all([
                 fetch(`${base}/api/admissions`, {
                     method: "POST",
@@ -394,7 +375,6 @@ async function runE2ETests() {
             ]);
 
             const statuses = [resA.status, resB.status];
-            // Exactly one must succeed (201) and one must fail (409)
             assert.ok(statuses.includes(201), "One request should succeed with 201");
             assert.ok(statuses.includes(409), "Conflicting request should fail with 409");
         });

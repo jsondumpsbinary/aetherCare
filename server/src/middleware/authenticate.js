@@ -48,7 +48,6 @@ async function authenticate(req, res, next) {
       });
     }
 
-    // Always use the current database role, not the JWT role.
     req.user = {
       id: user.id,
       name: user.name,

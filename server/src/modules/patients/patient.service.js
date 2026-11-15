@@ -4,7 +4,6 @@ const prisma = require("../../config/db");
 async function registerPatient(patientData) {
   const { name, phone, dateOfBirth, gender, address } = patientData;
 
-  // Generate a unique patient registration code.
   const patientCode = `PAT-${Date.now()}-${crypto
     .randomBytes(3)
     .toString("hex")

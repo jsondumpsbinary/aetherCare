@@ -2,7 +2,6 @@ const prisma = require("../../config/db");
 
 async function createAdmission({ patientId, bedId, reason }) {
     return await prisma.$transaction(async (tx) => {
-        // 1. Check whether patient exists
         const patient = await tx.patient.findUnique({
             where: { id: Number(patientId) },
         });
@@ -15,7 +14,6 @@ async function createAdmission({ patientId, bedId, reason }) {
             };
         }
 
-        // 2. Check whether patient already has an active admission
         const activePatientAdmission = await tx.admission.findFirst({
             where: {
                 patientId: Number(patientId),
@@ -31,7 +29,6 @@ async function createAdmission({ patientId, bedId, reason }) {
             };
         }
 
-        // 3. Check whether bed exists
         const bed = await tx.bed.findUnique({
             where: { id: Number(bedId) },
         });
@@ -44,7 +41,6 @@ async function createAdmission({ patientId, bedId, reason }) {
             };
         }
 
-        // 4. Reject maintenance beds
         if (bed.status === "MAINTENANCE") {
             return {
                 error: "BED_UNDER_MAINTENANCE",
@@ -53,7 +49,6 @@ async function createAdmission({ patientId, bedId, reason }) {
             };
         }
 
-        // 5. Concurrency protection: Atomic conditional update
         const updateResult = await tx.bed.updateMany({
             where: {
                 id: Number(bedId),
@@ -72,7 +67,6 @@ async function createAdmission({ patientId, bedId, reason }) {
             };
         }
 
-        // 6. Create admission record
         const admission = await tx.admission.create({
             data: {
                 patientId: Number(patientId),

@@ -31,7 +31,6 @@ async function runInventoryAndOPDTests() {
     }
 
     try {
-        // Setup authenticated admin user & token
         let adminUser = await prisma.user.findFirst({
             where: { role: "ADMIN", isActive: true },
         });
@@ -64,8 +63,6 @@ async function runInventoryAndOPDTests() {
         let patientId;
         let visitId;
         let medicineId;
-
-        // --- OPD MANAGEMENT TESTS ---
 
         await test("OPD 1: Setup Department, Doctor and Patient", async () => {
             const dept = await prisma.department.create({
@@ -153,8 +150,6 @@ async function runInventoryAndOPDTests() {
             assert.strictEqual(res.status, 400);
         });
 
-        // --- INVENTORY MANAGEMENT TESTS ---
-
         await test("Inventory 1: Add new medicine to catalogue with initial stock", async () => {
             const res = await fetch(`${base}/api/inventory/medicines`, {
                 method: "POST",
@@ -227,7 +222,7 @@ async function runInventoryAndOPDTests() {
             });
             assert.strictEqual(res.status, 200);
             const data = await res.json();
-            assert.strictEqual(data.data.medicine.currentStock, 40); // 25 + 15
+            assert.strictEqual(data.data.medicine.currentStock, 40);
             assert.strictEqual(data.data.movement.movementType, "RESTOCK");
         });
 
@@ -243,7 +238,7 @@ async function runInventoryAndOPDTests() {
             });
             assert.strictEqual(res.status, 200);
             const data = await res.json();
-            assert.strictEqual(data.data.medicine.currentStock, 30); // 40 - 10
+            assert.strictEqual(data.data.medicine.currentStock, 30);
             assert.strictEqual(data.data.movement.movementType, "DISPENSED");
             assert.strictEqual(data.data.movement.patientId, patientId);
         });
@@ -253,7 +248,7 @@ async function runInventoryAndOPDTests() {
                 method: "POST",
                 headers: authHeaders,
                 body: JSON.stringify({
-                    quantity: 100, // available is 30
+                    quantity: 100,
                     patientId,
                 }),
             });
@@ -296,7 +291,7 @@ async function runInventoryAndOPDTests() {
             });
             assert.strictEqual(res.status, 200);
             const data = await res.json();
-            assert.ok(data.count >= 4); // initial, restock, issue, adjust
+            assert.ok(data.count >= 4);
             const types = data.data.map((m) => m.movementType);
             assert.ok(types.includes("RESTOCK"));
             assert.ok(types.includes("DISPENSED"));

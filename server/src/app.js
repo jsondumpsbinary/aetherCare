@@ -36,11 +36,8 @@ app.get("/api/health", (req, res) => {
     });
 });
 
-// Public authentication endpoints
 app.use("/api/auth", authRoutes);
 
-// All hospital APIs require authentication
-// Patients
 app.use(
     "/api/patients",
     authenticate,
@@ -53,7 +50,6 @@ app.use(
     patientRoutes
 );
 
-// Departments
 app.use(
     "/api/departments",
     authenticate,
@@ -64,7 +60,6 @@ app.use(
     departmentRoutes
 );
 
-// Doctors
 app.use(
     "/api/doctors",
     authenticate,
@@ -75,7 +70,6 @@ app.use(
     doctorRoutes
 );
 
-// OPD
 app.use(
     "/api/opd-visits",
     authenticate,
@@ -87,7 +81,6 @@ app.use(
     visitRoutes
 );
 
-// Wards
 app.use(
     "/api/wards",
     authenticate,
@@ -98,7 +91,6 @@ app.use(
     wardRoutes
 );
 
-// Beds
 app.use(
     "/api/beds",
     authenticate,
@@ -110,7 +102,6 @@ app.use(
     bedRoutes
 );
 
-// Admissions
 app.use(
     "/api/admissions",
     authenticate,
@@ -122,7 +113,6 @@ app.use(
     admissionRoutes
 );
 
-// Inventory
 app.use(
     "/api/inventory",
     authenticate,
