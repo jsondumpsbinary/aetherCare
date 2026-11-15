@@ -1,5 +1,7 @@
 const prisma = require("../../config/db");
 
+const VALID_MOVEMENT_TYPES = ["RESTOCK", "DISPENSED", "ADJUSTMENT", "DISCARDED"];
+
 async function addMedicine({
     name,
     genericName,
@@ -337,7 +339,57 @@ async function adjustStock(id, { newStock, reason }) {
     });
 }
 
+async function getLowStockMedicines() {
+    const medicines = await prisma.$queryRaw`
+        SELECT * FROM "Medicine"
+        WHERE "currentStock" <= "lowStockThreshold"
+        ORDER BY "currentStock" ASC, "name" ASC
+    `;
+
+    return medicines;
+}
+
+async function getStockMovements({ medicineId, patientId, movementType, limit = 50 } = {}) {
+    const where = {};
+
+    if (medicineId) {
+        where.medicineId = Number(medicineId);
+    }
+
+    if (patientId) {
+        where.patientId = Number(patientId);
+    }
+
+    if (movementType && VALID_MOVEMENT_TYPES.includes(movementType)) {
+        where.movementType = movementType;
+    }
+
+    return await prisma.stockMovement.findMany({
+        where,
+        take: Number(limit) || 50,
+        orderBy: { createdAt: "desc" },
+        include: {
+            medicine: {
+                select: {
+                    id: true,
+                    name: true,
+                    batchNumber: true,
+                    unit: true,
+                },
+            },
+            patient: {
+                select: {
+                    id: true,
+                    patientCode: true,
+                    name: true,
+                },
+            },
+        },
+    });
+}
+
 module.exports = {
+    VALID_MOVEMENT_TYPES,
     addMedicine,
     getMedicines,
     getMedicineById,
@@ -345,4 +397,7 @@ module.exports = {
     restockMedicine,
     issueMedicine,
     adjustStock,
+    getLowStockMedicines,
+    getStockMovements,
 };
+

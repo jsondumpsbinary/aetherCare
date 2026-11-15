@@ -6,6 +6,8 @@ const {
     restockMedicine,
     issueMedicine,
     adjustStock,
+    getLowStockMedicines,
+    getStockMovements,
 } = require("./inventory.service");
 
 async function createMedicine(req, res) {
@@ -360,6 +362,49 @@ async function adjust(req, res) {
     }
 }
 
+async function getLowStock(req, res) {
+    try {
+        const medicines = await getLowStockMedicines();
+
+        return res.status(200).json({
+            success: true,
+            count: medicines.length,
+            data: medicines,
+        });
+    } catch (error) {
+        console.error("Error fetching low-stock medicines:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error while fetching low-stock medicines.",
+        });
+    }
+}
+
+async function listMovements(req, res) {
+    try {
+        const { medicineId, patientId, movementType, limit } = req.query;
+
+        const movements = await getStockMovements({
+            medicineId,
+            patientId,
+            movementType,
+            limit,
+        });
+
+        return res.status(200).json({
+            success: true,
+            count: movements.length,
+            data: movements,
+        });
+    } catch (error) {
+        console.error("Error fetching stock movements:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error while fetching stock movements.",
+        });
+    }
+}
+
 module.exports = {
     createMedicine,
     listMedicines,
@@ -368,4 +413,7 @@ module.exports = {
     restock,
     issue,
     adjust,
+    getLowStock,
+    listMovements,
 };
+
