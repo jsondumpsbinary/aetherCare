@@ -203,6 +203,96 @@ async function restockMedicine(id, { quantity, batchNumber, expiryDate, reason }
     });
 }
 
+async function issueMedicine(id, { quantity, patientId, reason }) {
+    const medicineId = Number(id);
+    const qty = Number(quantity);
+
+    if (!Number.isInteger(qty) || qty <= 0) {
+        return { invalidQuantity: true };
+    }
+
+    return await prisma.$transaction(async (tx) => {
+        const medicine = await tx.medicine.findUnique({
+            where: { id: medicineId },
+        });
+
+        if (!medicine) {
+            return { notFound: true };
+        }
+
+        let patientRecord = null;
+        if (patientId) {
+            patientRecord = await tx.patient.findUnique({
+                where: { id: Number(patientId) },
+            });
+
+            if (!patientRecord) {
+                return { patientNotFound: true };
+            }
+        }
+
+        if (medicine.currentStock < qty) {
+            return {
+                insufficientStock: true,
+                currentStock: medicine.currentStock,
+                requested: qty,
+            };
+        }
+
+        const updateResult = await tx.medicine.updateMany({
+            where: {
+                id: medicineId,
+                currentStock: { gte: qty },
+            },
+            data: {
+                currentStock: { decrement: qty },
+            },
+        });
+
+        if (updateResult.count === 0) {
+            return {
+                insufficientStock: true,
+                currentStock: medicine.currentStock,
+                requested: qty,
+            };
+        }
+
+        const previousStock = medicine.currentStock;
+        const newStock = previousStock - qty;
+
+        const updatedMedicine = await tx.medicine.findUnique({
+            where: { id: medicineId },
+        });
+
+        const movement = await tx.stockMovement.create({
+            data: {
+                medicineId,
+                patientId: patientId ? Number(patientId) : null,
+                quantity: qty,
+                movementType: "DISPENSED",
+                previousStock,
+                newStock,
+                reason: reason ? reason.trim() : "Dispensed for patient treatment",
+            },
+            include: {
+                patient: {
+                    select: {
+                        id: true,
+                        patientCode: true,
+                        name: true,
+                    },
+                },
+            },
+        });
+
+        return {
+            success: true,
+            medicine: updatedMedicine,
+            movement,
+        };
+    });
+}
+
 async function adjustStock(id, { newStock, reason }) {
     const medicineId = Number(id);
     const targetStock = Number(newStock);
@@ -253,5 +343,6 @@ module.exports = {
     getMedicineById,
     updateMedicine,
     restockMedicine,
+    issueMedicine,
     adjustStock,
 };

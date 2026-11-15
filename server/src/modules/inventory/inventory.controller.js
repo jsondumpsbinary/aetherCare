@@ -4,6 +4,7 @@ const {
     getMedicineById,
     updateMedicine,
     restockMedicine,
+    issueMedicine,
     adjustStock,
 } = require("./inventory.service");
 
@@ -239,6 +240,78 @@ async function restock(req, res) {
     }
 }
 
+async function issue(req, res) {
+    try {
+        const id = Number(req.params.id);
+        const { quantity, patientId, reason } = req.body;
+
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid medicine ID.",
+            });
+        }
+
+        if (quantity === undefined || !Number.isInteger(Number(quantity)) || Number(quantity) <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Quantity must be a positive integer.",
+            });
+        }
+
+        if (patientId !== undefined && (!Number.isInteger(Number(patientId)) || Number(patientId) <= 0)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid patient ID.",
+            });
+        }
+
+        const result = await issueMedicine(id, {
+            quantity,
+            patientId,
+            reason,
+        });
+
+        if (result.notFound) {
+            return res.status(404).json({
+                success: false,
+                message: "Medicine not found.",
+            });
+        }
+
+        if (result.patientNotFound) {
+            return res.status(404).json({
+                success: false,
+                message: "Patient not found.",
+            });
+        }
+
+        if (result.insufficientStock) {
+            return res.status(409).json({
+                success: false,
+                message: "Insufficient stock.",
+                currentStock: result.currentStock,
+                requested: result.requested,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Medicine issued successfully.",
+            data: {
+                medicine: result.medicine,
+                movement: result.movement,
+            },
+        });
+    } catch (error) {
+        console.error("Error issuing medicine:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error while issuing medicine.",
+        });
+    }
+}
+
 async function adjust(req, res) {
     try {
         const id = Number(req.params.id);
@@ -293,5 +366,6 @@ module.exports = {
     fetchMedicineById,
     editMedicine,
     restock,
+    issue,
     adjust,
 };

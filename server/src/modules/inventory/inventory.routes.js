@@ -6,6 +6,7 @@ const {
     fetchMedicineById,
     editMedicine,
     restock,
+    issue,
     adjust,
 } = require("./inventory.controller");
 
@@ -18,6 +19,7 @@ router.patch("/medicines/:id", editMedicine);
 
 // Stock operation routes
 router.post("/medicines/:id/restock", restock);
+router.post("/medicines/:id/issue", issue);
 router.post("/medicines/:id/adjust", adjust);
 
 module.exports = router;
