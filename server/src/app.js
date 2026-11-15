@@ -1,6 +1,7 @@
 
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 
 const patientRoutes = require("./modules/patients/patient.routes");
 const departmentRoutes = require("./modules/opd/department.routes");
@@ -22,7 +23,8 @@ const opdManagers = ["ADMIN", "RECEPTIONIST", "DOCTOR"];
 const bedManagers = ["ADMIN", "NURSE"];
 const admissionManagers = ["ADMIN", "RECEPTIONIST", "NURSE"];
 
-app.use(cors());
+app.use(helmet());
+app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
