@@ -1,5 +1,7 @@
 const assert = require("node:assert");
 const http = require("node:http");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const app = require("../app");
 const prisma = require("../config/db");
 
@@ -29,6 +31,33 @@ async function runE2ETests() {
     }
 
     try {
+        let adminUser = await prisma.user.findFirst({
+            where: { role: "ADMIN", isActive: true },
+        });
+
+        if (!adminUser) {
+            const passwordHash = await bcrypt.hash("AdminPassword123!", 10);
+            adminUser = await prisma.user.create({
+                data: {
+                    name: "E2E Administrator",
+                    email: `admin_${Date.now()}@aethercare.test`,
+                    passwordHash,
+                    role: "ADMIN",
+                },
+            });
+        }
+
+        const token = jwt.sign(
+            { sub: String(adminUser.id), role: adminUser.role },
+            process.env.JWT_SECRET || "aethercare-dev-secret-key-at-least-32-chars-long",
+            { expiresIn: "1h" }
+        );
+
+        const authHeaders = {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        };
+
         let testWardId;
         let testBed1Id;
         let testBed2Id;
@@ -40,7 +69,7 @@ async function runE2ETests() {
         await test("Step 1: Create a ward", async () => {
             const res = await fetch(`${base}/api/wards`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     name: `E2E Ward ${Date.now()}`,
                     description: "End to end testing ward",
@@ -58,7 +87,7 @@ async function runE2ETests() {
             const timestamp = Date.now();
             const res1 = await fetch(`${base}/api/beds`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     bedNumber: `E2E-BED-1-${timestamp}`,
                     wardId: testWardId,
@@ -72,7 +101,7 @@ async function runE2ETests() {
 
             const res2 = await fetch(`${base}/api/beds`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     bedNumber: `E2E-BED-2-${timestamp}`,
                     wardId: testWardId,
@@ -89,7 +118,7 @@ async function runE2ETests() {
         await test("Step 3: Obtain/register patient ID from Patient Management", async () => {
             const res1 = await fetch(`${base}/api/patients`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     name: "E2E Test Patient Alpha",
                     phone: "9112233445",
@@ -101,7 +130,7 @@ async function runE2ETests() {
 
             const res2 = await fetch(`${base}/api/patients`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     name: "E2E Test Patient Beta",
                     phone: "9112233446",
@@ -114,7 +143,9 @@ async function runE2ETests() {
 
         // Step 4: Fetch available beds
         await test("Step 4: Fetch available beds", async () => {
-            const res = await fetch(`${base}/api/beds/available?wardId=${testWardId}`);
+            const res = await fetch(`${base}/api/beds/available?wardId=${testWardId}`, {
+                headers: authHeaders,
+            });
             assert.strictEqual(res.status, 200);
             const data = await res.json();
             assert.ok(data.count >= 2);
@@ -127,7 +158,7 @@ async function runE2ETests() {
         await test("Step 5: Admit the patient to the first bed", async () => {
             const res = await fetch(`${base}/api/admissions`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     patientId: testPatient1Id,
                     bedId: testBed1Id,
@@ -142,7 +173,9 @@ async function runE2ETests() {
 
         // Step 6: Verify the bed becomes OCCUPIED
         await test("Step 6: Verify the bed becomes OCCUPIED", async () => {
-            const res = await fetch(`${base}/api/beds/${testBed1Id}`);
+            const res = await fetch(`${base}/api/beds/${testBed1Id}`, {
+                headers: authHeaders,
+            });
             assert.strictEqual(res.status, 200);
             const data = await res.json();
             assert.strictEqual(data.data.status, "OCCUPIED");
@@ -150,7 +183,9 @@ async function runE2ETests() {
 
         // Step 7: Verify the admission becomes ADMITTED
         await test("Step 7: Verify the admission becomes ADMITTED", async () => {
-            const res = await fetch(`${base}/api/admissions/${testAdmissionId}`);
+            const res = await fetch(`${base}/api/admissions/${testAdmissionId}`, {
+                headers: authHeaders,
+            });
             assert.strictEqual(res.status, 200);
             const data = await res.json();
             assert.strictEqual(data.data.status, "ADMITTED");
@@ -162,7 +197,7 @@ async function runE2ETests() {
         await test("Step 8 & 9: Attempt to assign same bed again -> rejected", async () => {
             const res = await fetch(`${base}/api/admissions`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     patientId: testPatient2Id,
                     bedId: testBed1Id,
@@ -177,7 +212,7 @@ async function runE2ETests() {
         await test("Step 10 & 11: Attempt to admit same patient to another bed -> rejected", async () => {
             const res = await fetch(`${base}/api/admissions`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     patientId: testPatient1Id,
                     bedId: testBed2Id,
@@ -193,6 +228,7 @@ async function runE2ETests() {
         await test("Step 12: Discharge the patient", async () => {
             const res = await fetch(`${base}/api/admissions/${testAdmissionId}/discharge`, {
                 method: "PATCH",
+                headers: authHeaders,
             });
             assert.strictEqual(res.status, 200);
             const data = await res.json();
@@ -201,7 +237,9 @@ async function runE2ETests() {
 
         // Step 13: Verify the admission becomes DISCHARGED
         await test("Step 13: Verify the admission becomes DISCHARGED", async () => {
-            const res = await fetch(`${base}/api/admissions/${testAdmissionId}`);
+            const res = await fetch(`${base}/api/admissions/${testAdmissionId}`, {
+                headers: authHeaders,
+            });
             assert.strictEqual(res.status, 200);
             const data = await res.json();
             assert.strictEqual(data.data.status, "DISCHARGED");
@@ -210,7 +248,9 @@ async function runE2ETests() {
 
         // Step 14: Verify the bed becomes AVAILABLE
         await test("Step 14: Verify the bed becomes AVAILABLE", async () => {
-            const res = await fetch(`${base}/api/beds/${testBed1Id}`);
+            const res = await fetch(`${base}/api/beds/${testBed1Id}`, {
+                headers: authHeaders,
+            });
             assert.strictEqual(res.status, 200);
             const data = await res.json();
             assert.strictEqual(data.data.status, "AVAILABLE");
@@ -220,6 +260,7 @@ async function runE2ETests() {
         await test("Step 15 & 16: Attempt duplicate discharge -> rejected", async () => {
             const res = await fetch(`${base}/api/admissions/${testAdmissionId}/discharge`, {
                 method: "PATCH",
+                headers: authHeaders,
             });
             assert.strictEqual(res.status, 400);
             const data = await res.json();
@@ -230,7 +271,7 @@ async function runE2ETests() {
         await test("Validation: Invalid patient ID returns 404", async () => {
             const res = await fetch(`${base}/api/admissions`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({ patientId: 999999, bedId: testBed2Id }),
             });
             assert.strictEqual(res.status, 404);
@@ -239,7 +280,7 @@ async function runE2ETests() {
         await test("Validation: Invalid bed ID returns 404", async () => {
             const res = await fetch(`${base}/api/admissions`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({ patientId: testPatient2Id, bedId: 999999 }),
             });
             assert.strictEqual(res.status, 404);
@@ -249,7 +290,7 @@ async function runE2ETests() {
             const bed = await prisma.bed.findUnique({ where: { id: testBed1Id } });
             const res = await fetch(`${base}/api/beds`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     bedNumber: bed.bedNumber,
                     wardId: testWardId,
@@ -261,7 +302,7 @@ async function runE2ETests() {
         await test("Validation: Invalid ward ID returns 404", async () => {
             const res = await fetch(`${base}/api/beds`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     bedNumber: `BED-INV-WARD-${Date.now()}`,
                     wardId: 888888,
@@ -273,7 +314,7 @@ async function runE2ETests() {
         await test("Validation: Maintenance bed assignment rejected with 400", async () => {
             const maintBedRes = await fetch(`${base}/api/beds`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     bedNumber: `BED-MAINT-${Date.now()}`,
                     wardId: testWardId,
@@ -284,7 +325,7 @@ async function runE2ETests() {
 
             const res = await fetch(`${base}/api/admissions`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     patientId: testPatient2Id,
                     bedId: maintBed.id,
@@ -297,7 +338,7 @@ async function runE2ETests() {
             // Admit patient 2 to bed 2
             await fetch(`${base}/api/admissions`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     patientId: testPatient2Id,
                     bedId: testBed2Id,
@@ -307,7 +348,7 @@ async function runE2ETests() {
             // Try to patch bed 2 to AVAILABLE
             const res = await fetch(`${base}/api/beds/${testBed2Id}`, {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({ status: "AVAILABLE" }),
             });
             assert.strictEqual(res.status, 400);
@@ -317,7 +358,7 @@ async function runE2ETests() {
             // Create a fresh bed
             const freshBedRes = await fetch(`${base}/api/beds`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({
                     bedNumber: `CONCUR-BED-${Date.now()}`,
                     wardId: testWardId,
@@ -328,13 +369,13 @@ async function runE2ETests() {
             // Create two new patients
             const pA = (await (await fetch(`${base}/api/patients`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({ name: "Patient Concurrent A", phone: "9000000001" }),
             })).json()).data;
 
             const pB = (await (await fetch(`${base}/api/patients`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders,
                 body: JSON.stringify({ name: "Patient Concurrent B", phone: "9000000002" }),
             })).json()).data;
 
@@ -342,12 +383,12 @@ async function runE2ETests() {
             const [resA, resB] = await Promise.all([
                 fetch(`${base}/api/admissions`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: authHeaders,
                     body: JSON.stringify({ patientId: pA.id, bedId: freshBed.id }),
                 }),
                 fetch(`${base}/api/admissions`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: authHeaders,
                     body: JSON.stringify({ patientId: pB.id, bedId: freshBed.id }),
                 }),
             ]);
