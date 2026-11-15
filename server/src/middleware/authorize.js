@@ -19,4 +19,16 @@ function authorize(...allowedRoles) {
     };
 }
 
+function authorizeMethods(methodRoles) {
+    return (req, res, next) => {
+        const allowedRoles =
+            methodRoles[req.method] ||
+            (req.method === "HEAD" ? methodRoles.GET : undefined) ||
+            [];
+
+        return authorize(...allowedRoles)(req, res, next);
+    };
+}
+
 module.exports = authorize;
+module.exports.authorizeMethods = authorizeMethods;

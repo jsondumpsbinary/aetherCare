@@ -12,8 +12,15 @@ const admissionRoutes = require("./modules/admissions/admission.routes");
 const authRoutes = require("./modules/auth/auth.routes");
 const authenticate = require("./middleware/authenticate");
 const authorize = require("./middleware/authorize");
+const { authorizeMethods } = authorize;
 
 const app = express();
+
+const allHospitalRoles = ["ADMIN", "RECEPTIONIST", "DOCTOR", "NURSE"];
+const patientManagers = ["ADMIN", "RECEPTIONIST"];
+const opdManagers = ["ADMIN", "RECEPTIONIST", "DOCTOR"];
+const bedManagers = ["ADMIN", "NURSE"];
+const admissionManagers = ["ADMIN", "RECEPTIONIST", "NURSE"];
 
 app.use(cors());
 app.use(express.json());
@@ -33,7 +40,12 @@ app.use("/api/auth", authRoutes);
 app.use(
     "/api/patients",
     authenticate,
-    authorize("ADMIN", "RECEPTIONIST", "DOCTOR", "NURSE"),
+    authorizeMethods({
+        GET: allHospitalRoles,
+        POST: patientManagers,
+        PATCH: patientManagers,
+        DELETE: patientManagers,
+    }),
     patientRoutes
 );
 
@@ -41,7 +53,10 @@ app.use(
 app.use(
     "/api/departments",
     authenticate,
-    authorize("ADMIN", "RECEPTIONIST", "DOCTOR", "NURSE"),
+    authorizeMethods({
+        GET: allHospitalRoles,
+        POST: ["ADMIN"],
+    }),
     departmentRoutes
 );
 
@@ -49,7 +64,10 @@ app.use(
 app.use(
     "/api/doctors",
     authenticate,
-    authorize("ADMIN", "RECEPTIONIST", "DOCTOR", "NURSE"),
+    authorizeMethods({
+        GET: allHospitalRoles,
+        POST: ["ADMIN"],
+    }),
     doctorRoutes
 );
 
@@ -57,7 +75,9 @@ app.use(
 app.use(
     "/api/opd-visits",
     authenticate,
-    authorize("ADMIN", "RECEPTIONIST", "DOCTOR", "NURSE"),
+    authorizeMethods({
+        POST: opdManagers,
+    }),
     visitRoutes
 );
 
@@ -65,7 +85,10 @@ app.use(
 app.use(
     "/api/wards",
     authenticate,
-    authorize("ADMIN", "NURSE", "RECEPTIONIST", "DOCTOR"),
+    authorizeMethods({
+        GET: allHospitalRoles,
+        POST: ["ADMIN"],
+    }),
     wardRoutes
 );
 
@@ -73,7 +96,11 @@ app.use(
 app.use(
     "/api/beds",
     authenticate,
-    authorize("ADMIN", "NURSE", "RECEPTIONIST", "DOCTOR"),
+    authorizeMethods({
+        GET: allHospitalRoles,
+        POST: bedManagers,
+        PATCH: bedManagers,
+    }),
     bedRoutes
 );
 
@@ -81,7 +108,11 @@ app.use(
 app.use(
     "/api/admissions",
     authenticate,
-    authorize("ADMIN", "RECEPTIONIST", "NURSE", "DOCTOR"),
+    authorizeMethods({
+        GET: allHospitalRoles,
+        POST: admissionManagers,
+        PATCH: admissionManagers,
+    }),
     admissionRoutes
 );
 
