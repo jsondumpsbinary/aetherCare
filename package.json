@@ -9,7 +9,8 @@
     "dev:server": "npm --prefix server run dev",
     "build:client": "npm --prefix client run build",
     "electron": "electron .",
-    "dev": "concurrently -k -p \"[{name}]\" -n \"SERVER,CLIENT,ELECTRON\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run dev:server\" \"npm run dev:client\" \"electron .\""
+    "dev": "concurrently -k -p \"[{name}]\" -n \"SERVER,CLIENT,ELECTRON\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run dev:server\" \"npm run dev:client\" \"electron .\"",
+    "dist": "npm run build:client && electron-builder --mac dmg"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,41 @@
   "type": "commonjs",
   "devDependencies": {
     "concurrently": "^10.0.7",
-    "electron": "^45.3.1"
+    "electron": "^45.3.1",
+    "electron-builder": "^26.7.0"
+  },
+  "build": {
+    "appId": "com.aethercare.desktop",
+    "productName": "AetherCare",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**/*",
+      "client/dist/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.medical",
+      "target": [
+        "dmg"
+      ],
+      "identity": null
+    },
+    "dmg": {
+      "title": "AetherCare Installer",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
   }
 }
